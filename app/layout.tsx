@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import StatusBar from "@/components/StatusBar";
+import TopNav from "@/components/TopNav";
 
 export const metadata: Metadata = {
   title: "Converty OS",
@@ -10,15 +9,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="he" dir="rtl">
-      <body className="flex h-screen overflow-hidden" style={{ background: "#F7F8FA" }}>
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <StatusBar />
-          <main className="flex-1 overflow-y-auto">
-            {children}
-          </main>
-        </div>
+    <html lang="en" dir="ltr">
+      <body
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+          background: "var(--page-bg)",
+          margin: 0,
+        }}
+      >
+        <TopNav />
+        <main style={{ flex: 1, overflowY: "auto" }}>
+          {children}
+        </main>
       </body>
     </html>
   );

@@ -1,14 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&family=Heebo:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Heebo:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #F7F8FA;
-  --foreground: #111827;
-  --sidebar-bg: #0f1117;
-  --sidebar-text: #9ca3af;
-  --sidebar-active: #ffffff;
-  --accent: #4F46E5;
-  --accent-light: #EEF2FF;
+  /* ── Dispatch Terminal palette ── */
+  --page-bg: #EDEBE3;
+  --nav-bg: #111009;
+  --nav-text: #8B8780;
+  --nav-active: #FFFFFF;
+  --metrics-bg: #F5F2EA;
+  --border: #2A2520;
+  --border-light: #D9D5CC;
+  --accent: #FF3A00;
+  --accent-dim: rgba(255, 58, 0, 0.12);
+  --card-bg: #FAFAF6;
+  --card-bg-white: #FFFFFF;
+
+  /* Text */
+  --text-primary: #1A1712;
+  --text-secondary: #5C584E;
+  --text-muted: #9B9688;
 
   /* Trust score palette */
   --trust-green: #16a34a;
@@ -18,7 +28,7 @@
   --trust-red: #dc2626;
   --trust-red-bg: #fef2f2;
 
-  /* Health / churn palette — distinct from trust */
+  /* Health / churn palette */
   --health-green: #059669;
   --health-green-bg: #ecfdf5;
   --health-yellow: #ca8a04;
@@ -35,18 +45,14 @@
   --risk-24h-bg: #fffbeb;
   --risk-immed: #dc2626;
   --risk-immed-bg: #fef2f2;
-
-  /* Status bar */
-  --statusbar-bg: #0f1117;
-  --statusbar-height: 38px;
 }
 
 * { box-sizing: border-box; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'DM Sans', 'Heebo', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--page-bg);
+  color: var(--text-primary);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* Hebrew text always uses Heebo */
@@ -68,16 +74,38 @@ body {
   text-align: left;
 }
 
-/* Display numbers — DM Serif */
+/* ── Typography classes ── */
+.kpi-number {
+  font-family: 'Bebas Neue', Impact, sans-serif;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.section-label {
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.mono {
+  font-family: 'Courier Prime', 'Courier New', monospace;
+}
+
+/* Legacy num-display — mapped to Bebas Neue for consistency */
 .num-display {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: 'Bebas Neue', Impact, sans-serif;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  line-height: 1;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #C4BFB4; border-radius: 0; }
 
 /* ── T4 crisis pulse ── */
 @keyframes t4BorderPulse {
@@ -101,7 +129,7 @@ body {
   to { stroke-dashoffset: 100; }
 }
 
-/* ── Status bar pill pulse ── */
+/* ── Pill pulse ── */
 @keyframes pillPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
@@ -137,11 +165,10 @@ body {
 }
 
 /* ── Table hover ── */
-tr.hoverable:hover { background: #F3F4F6; cursor: pointer; }
+tr.hoverable:hover { background: #E8E5DC; cursor: pointer; }
 
 /* ── Focus ring ── */
 button:focus-visible, a:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
 }
