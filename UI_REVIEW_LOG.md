@@ -167,4 +167,116 @@ Priority fixes for Round 2 (from agent objections):
 
 ## Round 2
 
-*(In progress)*
+**Date:** 2026-04-01  
+**Commit:** `ui-review: round 2`  
+**Trigger:** Agent B (Scaler) said PARTIAL — scale gaps + tier filter counts
+
+### Priority Objections Addressed
+
+1. **Conversations filter tabs: per-tier counts** — Agent B  
+   Made the Tier legend cards (T4/T3/T2/T1) clickable filter shortcuts. Click any tier card to filter to that tier; click again to return to All. "× Clear filter" button appears when active. Before: informational only. After: one click to isolate T4 from T1 noise.
+
+2. **Portfolio Heatmap dots: clickable** — Agent C  
+   Real client dots are now `<a href="/clients">` links with pointer cursor. Ghost dots remain inert. Hover tooltip still shows name + trust score. Before: dots had no action. After: red/orange dot → click → /clients.
+
+3. **Clients table: pagination** — Agent B  
+   Added pagination at 20 rows/page. Row count bar shows "1–20 of 37 clients". Page buttons appear only when needed (totalPages > 1). Filter changes reset to page 1. At 120 clients this becomes "1–20 of 120" with 6 pages instead of a 120-row scroll. Before: flat infinite table. After: paginated, scalable.
+
+4. **Dashboard Approval Queue: oldest item age header** — Agent A  
+   Added "⏰ oldest: 4h 12m" badge in the Approval Queue card header. Orange + pulsing when >4h. Shows at a glance whether the queue is fresh or stale without reading individual card timestamps. Before: operator had to scan each timestamp. After: age is in the header.
+
+### Changes Made
+
+| File | Change |
+|------|--------|
+| `app/conversations/page.tsx` | Tier legend cards are clickable filter toggles with active state + "× Clear filter" |
+| `app/page.tsx` | Heatmap real-client dots are `<a>` links to /clients |
+| `app/clients/page.tsx` | Pagination: `PAGE_SIZE=20`, page state, `pagedClients` slice, page controls UI |
+| `components/ApprovalQueue.tsx` | Oldest item age badge in queue header (⏰ oldest: Xh Ym, pulses when stale) |
+
+---
+
+### Round 2 Agent Review
+
+### Agent A — "The Operator"
+
+**Did changes actually improve the UI?** YES
+
+The oldest-item-age badge in the Approval Queue header is exactly right. I open the dashboard, I see "⏰ oldest: 4h 12m" pulsing orange. I don't need to look at individual cards. I know immediately whether something is urgent.
+
+The tier filter click is much faster than the dropdown — I can click T4 and instantly isolate crisis items.
+
+**Highest-impact change still missing:**  
+The Reports page shows "0/8 ready" but gives no hint about WHY. Is it waiting for data? Is it a Sunday? The operator should see "Generate All Reports" as a primary CTA, not buried.
+
+**Scores (1-10):**
+- Operator freedom: 8 (was 7)
+- Trust ladder visibility: 7
+- Exception-only workflow: 8
+- Scale to 120: 7 (was 6)
+- Hebrew-first content: 7
+- Zero ambiguity: 7
+
+---
+
+### Agent B — "The Scaler"
+
+**Did changes actually improve the UI?** YES
+
+Pagination is in. At 120 clients, 6 pages of 20 is manageable. The filter+pagination reset is correct — changing filter goes back to page 1.
+
+The tier filter counts make the Conversations page scale-ready. At 400 leads/day with 40 T1 and 2 T4, I can click T4 and see exactly those 2 without scrolling 40 T1 cards.
+
+**Highest-impact change still missing:**  
+The Pulse page still has no pagination for leads. At 400 leads/day, a flat list is unusable. Also, there's no "sort by urgency" on the leads list (newest first is not the same as highest priority first — a hot lead 3 hours old can be more valuable than a stale lead 2 minutes old if they've been called).
+
+**Scores (1-10):**
+- Operator freedom: 8
+- Trust ladder visibility: 7
+- Exception-only workflow: 8
+- Scale to 120: 7 (was 5)
+- Hebrew-first content: 7
+- Zero ambiguity: 7
+
+---
+
+### Agent C — "The Trust Auditor"
+
+**Did changes actually improve the UI?** YES
+
+Heatmap dots are clickable — red dot → clients page. Exception signal to action is now one click.
+
+The Conversations tier filter is good. T4 (0) = clear means I can visually confirm nothing is on fire without reading cards.
+
+**Highest-impact change still missing:**  
+The trust ladder trajectory (are clients moving up or down?) is not visible at a glance anywhere. The heatmap shows current state but not direction. A client at 61 going down needs different action than a client at 61 going up. A simple ↑↓→ indicator per client in the Client table would close this gap.
+
+**Scores (1-10):**
+- Operator freedom: 8
+- Trust ladder visibility: 7 (was 7, plateau — trajectory still missing)
+- Exception-only workflow: 8
+- Scale to 120: 7
+- Hebrew-first content: 7
+- Zero ambiguity: 7
+
+---
+
+### Convergence Decision
+
+- Agent A: YES
+- Agent B: YES
+- Agent C: YES
+
+**All 3 YES → Run one more bonus round per protocol.**
+
+Agents propose: Reports CTA clarity, Pulse lead pagination + urgency sort, Trust trajectory indicator in Client table.
+
+---
+
+## Round 3 (Bonus — all 3 agents YES)
+
+**Trigger:** All agents YES per protocol — run one more round with agent-proposed changes.
+
+**Date:** 2026-04-01  
+**Commit:** `ui-review: round 3`
+

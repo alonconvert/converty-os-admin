@@ -207,6 +207,27 @@ export default function ApprovalQueue({ conversations }: Props) {
               {pendingConvs.length}
             </span>
           )}
+          {pendingConvs.length > 0 && (() => {
+            const oldest = Math.max(...pendingConvs.map((c) => c.ageMinutes ?? 0));
+            const h = Math.floor(oldest / 60);
+            const m = oldest % 60;
+            const label = h > 0 ? `${h}h ${m}m` : `${m}m`;
+            const isStale = oldest > 240;
+            return (
+              <span
+                style={{
+                  fontSize: 10, fontWeight: 700,
+                  padding: "2px 7px", borderRadius: 4,
+                  background: isStale ? "#fff7ed" : "#f9fafb",
+                  color: isStale ? "#c2410c" : "#6b7280",
+                  border: `1px solid ${isStale ? "#fed7aa" : "#e5e7eb"}`,
+                }}
+                className={isStale ? "pill-pulse" : ""}
+              >
+                ⏰ oldest: {label}
+              </span>
+            );
+          })()}
         </div>
         <span style={{ fontSize: 11, color: "#9ca3af" }}>
           A=approve · E=edit · R=reject (first item)

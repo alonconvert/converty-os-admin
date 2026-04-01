@@ -622,27 +622,41 @@ export default function Conversations() {
           </div>
         </div>
 
-        {/* Tier legend + counts */}
+        {/* Tier legend + counts — click to filter */}
         <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
           {(["T4", "T3", "T2", "T1"] as const).map((tier) => {
             const s = TIER_STYLE[tier];
             const count = tierCounts[tier];
+            const isActiveFilter = tierFilter.startsWith(tier);
             return (
               <div
                 key={tier}
+                onClick={() => setTierFilter(isActiveFilter ? "All Tiers" : `${tier} ${s.label}`)}
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
-                  background: "#fff", borderRadius: 7, border: `1px solid ${count > 0 && tier === "T4" ? "#fca5a5" : "#e5e7eb"}`,
+                  background: isActiveFilter ? s.bg : "#fff",
+                  borderRadius: 7,
+                  border: isActiveFilter ? `2px solid ${s.color}` : `1px solid ${count > 0 && tier === "T4" ? "#fca5a5" : "#e5e7eb"}`,
                   padding: "5px 10px",
+                  cursor: "pointer",
+                  transition: "border 0.15s, background 0.15s",
                 }}
               >
                 <span style={{ ...s, fontSize: 10, fontWeight: 700, padding: "1px 5px", borderRadius: 4 }}>{tier}</span>
                 <span style={{ fontSize: 11, color: "#6b7280" }}>{s.label}</span>
-                <span className="num-display" style={{ fontSize: 13, fontWeight: 700, color: count > 0 ? s.color : "#d1d5db" }}>{count}</span>
+                <span className="num-display" style={{ fontSize: 14, fontWeight: 700, color: count > 0 ? s.color : "#d1d5db" }}>{count}</span>
                 {tier !== "T1" && count === 0 && <span style={{ fontSize: 10, color: "#d1d5db" }}>clear</span>}
               </div>
             );
           })}
+          {tierFilter !== "All Tiers" && (
+            <button
+              onClick={() => setTierFilter("All Tiers")}
+              style={{ fontSize: 11, padding: "5px 10px", background: "none", border: "1px solid #e5e7eb", borderRadius: 7, color: "#6b7280", cursor: "pointer" }}
+            >
+              × Clear filter
+            </button>
+          )}
         </div>
 
         {/* Grouped view */}

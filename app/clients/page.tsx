@@ -334,6 +334,10 @@ export default function Clients() {
   // New state for bulk selection
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
 
+  // Pagination
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(1);
+
   const toggleKill = (id: string) => {
     setKilledClients((prev) => prev.includes(id) ? prev.filter((k) => k !== id) : [...prev, id]);
   };
@@ -384,6 +388,9 @@ export default function Clients() {
     { key: "supervised", label: `Supervised (${mockClients.filter((c) => c.level === "Supervised").length})` },
   ];
 
+  const totalPages = Math.ceil(filteredClients.length / PAGE_SIZE);
+  const pagedClients = filteredClients.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const allSelected = filteredClients.length > 0 && filteredClients.every((c) => selectedClients.includes(c.id));
 
   const toggleSelectAll = () => {
@@ -420,7 +427,7 @@ export default function Clients() {
           {pillDefs.map((pill) => (
             <button
               key={pill.key}
-              onClick={() => setClientFilter(pill.key)}
+              onClick={() => { setClientFilter(pill.key); setPage(1); }}
               style={{
                 padding: "4px 10px", borderRadius: 99, fontSize: 11, fontWeight: 600,
                 border: "none", cursor: "pointer",
@@ -470,7 +477,7 @@ export default function Clients() {
         ].map((s) => (
           <div
             key={s.label}
-            onClick={() => setClientFilter(clientFilter === s.filterKey ? "all" : s.filterKey)}
+            onClick={() => { setClientFilter(clientFilter === s.filterKey ? "all" : s.filterKey); setPage(1); }}
             style={{
               background: clientFilter === s.filterKey ? s.bg : "#fff",
               borderRadius: 8,
@@ -614,7 +621,7 @@ export default function Clients() {
             </tr>
           </thead>
           <tbody>
-            {filteredClients.map((client) => {
+            {pagedClients.map((client) => {
               const tc = trustColors[client.level as keyof typeof trustColors];
               const hc = healthColors[client.churnTier as ChurnTier];
               const isKilled = killedClients.includes(client.id);
@@ -792,6 +799,46 @@ export default function Clients() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "#fff", borderRadius: "0 0 10px 10px", borderTop: "1px solid #f3f4f6", marginTop: -1 }}>
+          <span style={{ fontSize: 11, color: "#6b7280" }}>
+            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredClients.length)} of {filteredClients.length} clients
+          </span>
+          <div style={{ display: "flex", gap: 4 }}>
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              style={{ fontSize: 11, padding: "3px 10px", borderRadius: 5, border: "1px solid #e5e7eb", background: "#fff", color: page === 1 ? "#d1d5db" : "#374151", cursor: page === 1 ? "default" : "pointer" }}
+            >
+              ← Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                style={{
+                  fontSize: 11, padding: "3px 9px", borderRadius: 5,
+                  border: "1px solid #e5e7eb",
+                  background: p === page ? "#4F46E5" : "#fff",
+                  color: p === page ? "#fff" : "#374151",
+                  cursor: "pointer", fontWeight: p === page ? 700 : 400,
+                }}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              style={{ fontSize: 11, padding: "3px 10px", borderRadius: 5, border: "1px solid #e5e7eb", background: "#fff", color: page === totalPages ? "#d1d5db" : "#374151", cursor: page === totalPages ? "default" : "pointer" }}
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Client detail drawer */}
       {selectedClient && (

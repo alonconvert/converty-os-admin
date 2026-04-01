@@ -49,10 +49,10 @@ function PortfolioHeatMap() {
   const total = systemStats.totalClients;
   const allDots = Array.from({ length: total }, (_, i) => {
     const real = activeClients[i];
-    if (real) return { score: real.trustScore, budget: real.monthlyBudget, name: real.name };
+    if (real) return { score: real.trustScore, budget: real.monthlyBudget, name: real.name, id: real.id, real: true };
     // ghost client
     const score = 40 + Math.floor(((i * 17) % 60));
-    return { score, budget: 3000 + ((i * 2300) % 18000), name: `Client ${i + 1}` };
+    return { score, budget: 3000 + ((i * 2300) % 18000), name: `Client ${i + 1}`, id: null, real: false };
   });
 
   return (
@@ -70,26 +70,31 @@ function PortfolioHeatMap() {
           dot.score >= 75 ? "#16a34a"
           : dot.score >= 40 ? "#d97706"
           : "#dc2626";
+        const isProblematic = dot.score < 40;
         return (
-          <div
+          <a
             key={i}
-            title={`${dot.name} — Trust: ${dot.score}`}
+            href={dot.real ? `/clients` : undefined}
+            title={`${dot.name} — Trust: ${dot.score}${isProblematic ? " ⚠ Click to view" : ""}`}
             style={{
+              display: "inline-block",
               width: size,
               height: size,
               borderRadius: "50%",
               background: color,
               opacity: 0.7,
-              cursor: "default",
+              cursor: dot.real ? "pointer" : "default",
               transition: "opacity 0.15s, transform 0.15s",
+              textDecoration: "none",
+              outline: "none",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLDivElement).style.opacity = "1";
-              (e.currentTarget as HTMLDivElement).style.transform = "scale(1.3)";
+              (e.currentTarget as HTMLAnchorElement).style.opacity = "1";
+              (e.currentTarget as HTMLAnchorElement).style.transform = "scale(1.3)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLDivElement).style.opacity = "0.7";
-              (e.currentTarget as HTMLDivElement).style.transform = "scale(1)";
+              (e.currentTarget as HTMLAnchorElement).style.opacity = "0.7";
+              (e.currentTarget as HTMLAnchorElement).style.transform = "scale(1)";
             }}
           />
         );
