@@ -641,6 +641,15 @@ export default function Clients() {
               const currentLevel = localLevels[client.id] || client.level;
               const levelTc = trustColors[currentLevel as keyof typeof trustColors] || tc;
 
+              // Trust trajectory from recent events
+              const recentDelta = client.trustBreakdown.lastEvents
+                .slice(0, 3)
+                .reduce((sum, e) => sum + e.delta, 0);
+              const trajectory =
+                recentDelta > 2 ? { arrow: "↑", color: "#16a34a", title: `+${recentDelta} last 3 events` }
+                : recentDelta < -2 ? { arrow: "↓", color: "#dc2626", title: `${recentDelta} last 3 events` }
+                : { arrow: "→", color: "#9ca3af", title: "Stable" };
+
               return (
                 <tr
                   key={client.id}
@@ -689,11 +698,12 @@ export default function Clients() {
                           }}
                           style={{
                             fontSize: 12, fontWeight: 700, color: tc.text, background: "none", border: "none",
-                            cursor: "pointer", padding: 0,
+                            cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 3,
                           }}
                           title="Click for breakdown"
                         >
                           {client.trustScore}
+                          <span title={trajectory.title} style={{ fontSize: 11, fontWeight: 700, color: trajectory.color }}>{trajectory.arrow}</span>
                         </button>
                       </div>
                       <div style={{ fontSize: 9, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>

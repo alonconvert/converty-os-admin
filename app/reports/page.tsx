@@ -159,24 +159,32 @@ export default function Reports() {
           <div style={{ fontSize: 10, color: "#6b7280", marginTop: 4 }}>↑ +₪1,800 vs last week (+6.8%)</div>
         </div>
         {/* Reports Ready */}
-        <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: "12px 14px" }}>
+        <div style={{ background: readyCount === 0 ? "#fafafa" : "#fff", borderRadius: 10, border: readyCount === 0 ? "1px solid #c7d2fe" : "1px solid #e5e7eb", padding: "12px 14px" }}>
           <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>Reports Ready</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "#9ca3af", fontFamily: "'DM Serif Display', serif" }}>{readyCount}/{totalClients}</div>
-          {/* Progress bar: tiny filled blocks */}
+          <div style={{ fontSize: 22, fontWeight: 700, color: readyCount === 0 ? "#6b7280" : "#4F46E5", fontFamily: "'DM Serif Display', serif" }}>{readyCount}/{totalClients}</div>
+          {/* Progress bar */}
           <div style={{ display: "flex", gap: 2, marginTop: 6, marginBottom: 4 }}>
             {Array.from({ length: totalClients }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: 1,
-                  height: 4,
-                  borderRadius: 2,
-                  background: i < readyCount ? "#4F46E5" : "#e5e7eb",
-                }}
-              />
+              <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < readyCount ? "#4F46E5" : "#e5e7eb" }} />
             ))}
           </div>
-          <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>{countdown || "calculating…"}</div>
+          {readyCount === 0 ? (
+            <button
+              onClick={handleGenerate}
+              disabled={generating}
+              style={{
+                width: "100%", marginTop: 4, fontSize: 11, padding: "5px 0", borderRadius: 5,
+                border: "none", background: generating ? "#e5e7eb" : "#4F46E5",
+                color: generating ? "#9ca3af" : "#fff",
+                cursor: generating ? "default" : "pointer", fontWeight: 700,
+              }}
+            >
+              {generating ? "Generating…" : "↑ Generate Reports"}
+            </button>
+          ) : (
+            <div style={{ fontSize: 10, color: "#4F46E5", fontWeight: 600, marginTop: 2 }}>Ready to send</div>
+          )}
+          <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 3 }}>{countdown || "calculating…"}</div>
         </div>
       </div>
 

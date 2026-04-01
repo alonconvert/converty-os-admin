@@ -30,11 +30,14 @@ function parseAgeHours(age: string): number {
   return 0;
 }
 
+const LEADS_PAGE_SIZE = 20;
+
 export default function Pulse() {
   const totalLeadsToday = mockClients.reduce((sum, c) => sum + c.leadsToday, 0);
   const [hotFilter, setHotFilter] = useState(false);
   const [sortColumn, setSortColumn] = useState("score");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [leadsPage, setLeadsPage] = useState(1);
 
   const hotCount = mockLeads.filter((l) => l.score >= 80).length;
 
@@ -45,6 +48,7 @@ export default function Pulse() {
       setSortColumn(col);
       setSortDir("desc");
     }
+    setLeadsPage(1);
   };
 
   const sortArrow = (col: string) => {
@@ -61,11 +65,19 @@ export default function Pulse() {
       if (sortColumn === "score") { aVal = a.score; bVal = b.score; }
       else if (sortColumn === "status") { aVal = a.status; bVal = b.status; }
       else if (sortColumn === "when") { aVal = parseAgeHours(a.createdAt); bVal = parseAgeHours(b.createdAt); }
+      else if (sortColumn === "urgency") {
+        // urgency = score / (ageHours + 0.5) — high score + fresh = most urgent
+        aVal = a.score / (parseAgeHours(a.createdAt) + 0.5);
+        bVal = b.score / (parseAgeHours(b.createdAt) + 0.5);
+      }
       if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
       if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
   }, [filteredLeads, sortColumn, sortDir]);
+
+  const leadsTotalPages = Math.ceil(sortedLeads.length / LEADS_PAGE_SIZE);
+  const pagedLeads = sortedLeads.slice((leadsPage - 1) * LEADS_PAGE_SIZE, leadsPage * LEADS_PAGE_SIZE);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -125,18 +137,26 @@ export default function Pulse() {
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <h2 className="font-semibold text-gray-900 text-sm">All Leads</h2>
-            {/* Sort by Hottest quick button */}
-            <button
-              onClick={() => { setSortColumn("score"); setSortDir("desc"); }}
-              style={{
-                fontSize: 11, padding: "3px 10px", borderRadius: 99,
-                background: sortColumn === "score" ? "#4F46E5" : "#f3f4f6",
-                color: sortColumn === "score" ? "#fff" : "#6b7280",
-                border: "none", cursor: "pointer", fontWeight: 600,
-              }}
-            >
-              Sort by Hottest
-            </button>
+            <span style={{ fontSize: 11, color: "#9ca3af" }}>{sortedLeads.length} total</span>
+            {/* Sort quick buttons */}
+            {[
+              { key: "urgency", label: "⚡ Urgency" },
+              { key: "score", label: "🔥 Hottest" },
+              { key: "when", label: "⏱ Newest" },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => { setSortColumn(key); setSortDir("desc"); setLeadsPage(1); }}
+                style={{
+                  fontSize: 11, padding: "3px 10px", borderRadius: 99,
+                  background: sortColumn === key ? "#4F46E5" : "#f3f4f6",
+                  color: sortColumn === key ? "#fff" : "#6b7280",
+                  border: "none", cursor: "pointer", fontWeight: 600,
+                }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
           <div className="flex gap-2" style={{ alignItems: "center" }}>
             {/* Hot filter button */}
@@ -196,7 +216,7 @@ export default function Pulse() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {sortedLeads.map((lead) => {
+            {pagedLeads.map((lead) => {
               const ageH = parseAgeHours(lead.createdAt);
               const ageColor = ageH < 1 ? "#059669" : ageH < 2 ? "#d97706" : "#dc2626";
               const isStale = ageH >= 2;
@@ -270,6 +290,38 @@ export default function Pulse() {
             })}
           </tbody>
         </table>
+        {leadsTotalPages > 1 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
+            <span style={{ fontSize: 11, color: "#6b7280" }}>
+              {(leadsPage - 1) * LEADS_PAGE_SIZE + 1}–{Math.min(leadsPage * LEADS_PAGE_SIZE, sortedLeads.length)} of {sortedLeads.length} leads
+            </span>
+            <div style={{ display: "flex", gap: 4 }}>
+              <button
+                onClick={() => setLeadsPage((p) => Math.max(1, p - 1))}
+                disabled={leadsPage === 1}
+                style={{ fontSize: 11, padding: "3px 10px", borderRadius: 5, border: "1px solid #e5e7eb", background: "#fff", color: leadsPage === 1 ? "#d1d5db" : "#374151", cursor: leadsPage === 1 ? "default" : "pointer" }}
+              >
+                ← Prev
+              </button>
+              {Array.from({ length: leadsTotalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setLeadsPage(p)}
+                  style={{ fontSize: 11, padding: "3px 9px", borderRadius: 5, border: "1px solid #e5e7eb", background: p === leadsPage ? "#4F46E5" : "#fff", color: p === leadsPage ? "#fff" : "#374151", cursor: "pointer", fontWeight: p === leadsPage ? 700 : 400 }}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                onClick={() => setLeadsPage((p) => Math.min(leadsTotalPages, p + 1))}
+                disabled={leadsPage === leadsTotalPages}
+                style={{ fontSize: 11, padding: "3px 10px", borderRadius: 5, border: "1px solid #e5e7eb", background: "#fff", color: leadsPage === leadsTotalPages ? "#d1d5db" : "#374151", cursor: leadsPage === leadsTotalPages ? "default" : "pointer" }}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Pulse tenants */}
