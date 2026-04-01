@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import {
   systemStats,
   mockConversations,
@@ -102,10 +103,63 @@ function churnCount(tier: string) {
   return mockClients.filter((c) => c.churnTier === tier).length;
 }
 
+// ── At-Risk clients expanded panel ───────────────────────────────────────────
+const atRiskClients = mockClients.filter(
+  (c) => c.churnTier === "orange" || c.churnTier === "red"
+);
+
+// ── Overnight summary item key map ───────────────────────────────────────────
+const overnightItemHighlights: Record<string, string[]> = {
+  "Trust changes": overnightSummary.highlights.filter((h) =>
+    h.toLowerCase().includes("trust")
+  ),
+  "Campaign acts": overnightSummary.highlights.filter((h) =>
+    h.toLowerCase().includes("campaign") ||
+    h.toLowerCase().includes("lead batch") ||
+    h.toLowerCase().includes("meta") ||
+    h.toLowerCase().includes("google")
+  ),
+  "Leads arrived": overnightSummary.highlights.filter((h) =>
+    h.toLowerCase().includes("lead")
+  ),
+  "Auto-approved": overnightSummary.highlights.filter((h) =>
+    h.toLowerCase().includes("auto-approved") || h.toLowerCase().includes("messages")
+  ),
+};
+
 export default function Dashboard() {
+  const [atRiskOpen, setAtRiskOpen] = useState(false);
+  const [expandedOvernightItem, setExpandedOvernightItem] = useState<string | null>(null);
+  const [canaryOpen, setCanaryOpen] = useState(false);
+  const canaryRef = useRef<HTMLDivElement>(null);
+
+  // Close canary popover on outside click
+  useEffect(() => {
+    function handleOutsideClick(e: MouseEvent) {
+      if (canaryRef.current && !canaryRef.current.contains(e.target as Node)) {
+        setCanaryOpen(false);
+      }
+    }
+    if (canaryOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+    }
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [canaryOpen]);
+
   const pendingConvs = mockConversations.filter(
     (c) => c.status === "pending_approval" || c.status === "needs_human" || c.status === "auto_queued"
   );
+
+  // Supervised slots gauge config
+  const totalSlots = systemStats.supervisedCap;
+  const filledSlots = systemStats.supervisedClients;
+  const slotColor =
+    filledSlots <= 7 ? "#16a34a" : filledSlots <= 9 ? "#d97706" : "#dc2626";
+
+  // Pending queue oldest item age
+  const oldestMinutes = 252; // 4h 12m
+  const oldestDisplay = "4h 12m";
+  const oldestUrgent = oldestMinutes > 240;
 
   const kpis = [
     {
@@ -129,12 +183,14 @@ export default function Dashboard() {
     {
       label: "Pending Queue",
       value: systemStats.pendingApprovals,
-      sub: "need your eye",
+      sub: `oldest: ${oldestDisplay}`,
+      subColor: oldestUrgent ? "#d97706" : undefined,
       color: "#dc2626",
       urgent: true,
       trend: null,
       trendUp: null,
       sparkData: null,
+      extraBoxShadow: oldestUrgent ? "0 0 0 2px rgba(251,146,60,0.4)" : undefined,
     },
     {
       label: "Auto-Approved",
@@ -164,6 +220,7 @@ export default function Dashboard() {
       trend: null,
       trendUp: null,
       sparkData: null,
+      clickable: true,
     },
     {
       label: "Supervised Slots",
@@ -174,6 +231,7 @@ export default function Dashboard() {
       trendUp: null,
       sparkData: null,
       ltr: true,
+      gauge: true,
     },
     {
       label: "Agency Health",
@@ -184,6 +242,13 @@ export default function Dashboard() {
       trendUp: null,
       sparkData: null,
     },
+  ];
+
+  // Portfolio trend arrows
+  const portfolioTrends = [
+    { label: "Autonomous", count: mockClients.filter((c) => c.level === "Autonomous").length, color: "#16a34a", bg: "#f0fdf4", trendVal: 2, trendDir: "up" as const },
+    { label: "Semi-Auto", count: mockClients.filter((c) => c.level === "SemiAuto").length, color: "#d97706", bg: "#fefce8", trendVal: 0, trendDir: "neutral" as const },
+    { label: "Supervised", count: mockClients.filter((c) => c.level === "Supervised").length, color: "#dc2626", bg: "#fef2f2", trendVal: -1, trendDir: "down" as const },
   ];
 
   return (
@@ -231,6 +296,112 @@ export default function Dashboard() {
                 {autoApprovalQueue.length} message{autoApprovalQueue.length > 1 ? "s" : ""} auto-send in &lt;{Math.max(...autoApprovalQueue.map((a) => a.minutesRemaining))}min
               </div>
             )}
+
+            {/* CANARY pill */}
+            {canaryDeployment.active && (
+              <div ref={canaryRef} style={{ position: "relative" }}>
+                <button
+                  onClick={() => setCanaryOpen((v) => !v)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    background: "#faf5ff",
+                    border: "1px solid #e9d5ff",
+                    borderRadius: 8,
+                    padding: "5px 10px",
+                    fontSize: 12,
+                    color: "#7c3aed",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  ⚗ CANARY {canaryDeployment.version}
+                </button>
+                {canaryOpen && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 6px)",
+                      right: 0,
+                      zIndex: 50,
+                      background: "#fff",
+                      border: "1px solid #e9d5ff",
+                      borderRadius: 10,
+                      padding: "14px 16px",
+                      width: 260,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+                    }}
+                  >
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#7c3aed", marginBottom: 8 }}>
+                      ⚗ Canary {canaryDeployment.version}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 6 }}>
+                      {canaryDeployment.hoursRemaining}h remaining
+                    </div>
+                    <div style={{ fontSize: 11, color: "#374151", marginBottom: 4, fontWeight: 600 }}>Clients:</div>
+                    {canaryDeployment.clients.map((c) => (
+                      <div key={c} style={{ fontSize: 11, color: "#6b7280", padding: "1px 0" }}>• {c}</div>
+                    ))}
+                    <div style={{ borderTop: "1px solid #f3f4f6", marginTop: 8, paddingTop: 8 }}>
+                      {[
+                        {
+                          label: "Approval rate",
+                          val: canaryDeployment.approvalRate,
+                          base: canaryDeployment.baselineApprovalRate,
+                          higherIsBetter: true,
+                        },
+                        {
+                          label: "QA pass rate",
+                          val: canaryDeployment.qaPassRate,
+                          base: canaryDeployment.baselineQaPassRate,
+                          higherIsBetter: true,
+                        },
+                        {
+                          label: "Edit rate",
+                          val: canaryDeployment.editRate,
+                          base: canaryDeployment.baselineEditRate,
+                          higherIsBetter: false,
+                        },
+                      ].map((m) => {
+                        const better = m.higherIsBetter
+                          ? m.val >= m.base
+                          : m.val <= m.base;
+                        return (
+                          <div
+                            key={m.label}
+                            style={{ display: "flex", justifyContent: "space-between", fontSize: 11, padding: "2px 0" }}
+                          >
+                            <span style={{ color: "#6b7280" }}>{m.label}</span>
+                            <span style={{ fontWeight: 700, color: better ? "#059669" : "#dc2626" }}>
+                              {m.val}% <span style={{ color: "#9ca3af", fontWeight: 400 }}>/ {m.base}%</span>
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <button
+                      onClick={() => setCanaryOpen(false)}
+                      style={{
+                        marginTop: 10,
+                        width: "100%",
+                        fontSize: 11,
+                        padding: "6px",
+                        background: "#fef2f2",
+                        color: "#dc2626",
+                        border: "1px solid #fca5a5",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Rollback to v2.0
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div
               style={{
                 display: "flex",
@@ -265,13 +436,20 @@ export default function Dashboard() {
           {kpis.map((kpi) => (
             <div
               key={kpi.label}
+              onClick={kpi.clickable ? () => setAtRiskOpen((v) => !v) : undefined}
               style={{
                 background: "#fff",
                 borderRadius: 10,
                 padding: "12px 14px",
                 border: `1px solid ${kpi.urgent ? "#fca5a5" : "#e5e7eb"}`,
-                boxShadow: kpi.urgent ? "0 0 0 3px rgba(220,38,38,0.07)" : "none",
+                boxShadow: kpi.extraBoxShadow
+                  ? kpi.extraBoxShadow
+                  : kpi.urgent
+                  ? "0 0 0 3px rgba(220,38,38,0.07)"
+                  : "none",
                 position: "relative",
+                cursor: kpi.clickable ? "pointer" : "default",
+                transition: "box-shadow 0.15s",
               }}
             >
               <div
@@ -287,15 +465,128 @@ export default function Dashboard() {
                 {kpi.value}
               </div>
               <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginTop: 4 }}>{kpi.label}</div>
-              <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2, lineHeight: 1.3 }}>{kpi.sub}</div>
+              <div
+                style={{
+                  fontSize: 10,
+                  color: (kpi as { subColor?: string }).subColor ?? "#9ca3af",
+                  marginTop: 2,
+                  lineHeight: 1.3,
+                }}
+              >
+                {kpi.sub}
+              </div>
+              {/* Supervised slots gauge */}
+              {kpi.gauge && (
+                <div style={{ display: "flex", gap: 2, marginTop: 6, flexWrap: "wrap" }}>
+                  {Array.from({ length: totalSlots }, (_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        width: 10,
+                        height: 8,
+                        borderRadius: 2,
+                        background: i < filledSlots ? slotColor : "#f3f4f6",
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
               {kpi.sparkData && (
                 <div style={{ marginTop: 6 }}>
                   <Sparkline data={kpi.sparkData} color={kpi.color} height={24} />
                 </div>
               )}
+              {kpi.clickable && (
+                <div style={{ fontSize: 9, color: "#d97706", marginTop: 3, fontWeight: 700 }}>
+                  {atRiskOpen ? "▲ collapse" : "▼ expand"}
+                </div>
+              )}
             </div>
           ))}
         </div>
+
+        {/* At-Risk Clients expanded panel */}
+        {atRiskOpen && (
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 10,
+              border: "1px solid #fed7aa",
+              marginBottom: 14,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "10px 14px",
+                borderBottom: "1px solid #fed7aa",
+                background: "#fff7ed",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#9a3412" }}>
+                At-Risk Clients ({atRiskClients.length})
+              </span>
+              <button
+                onClick={() => setAtRiskOpen(false)}
+                style={{ fontSize: 12, color: "#9ca3af", background: "none", border: "none", cursor: "pointer" }}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 0 }}>
+              {atRiskClients.map((c, i) => {
+                const tierColor = c.churnTier === "red" ? "#be123c" : "#ea580c";
+                const tierBg = c.churnTier === "red" ? "#fff1f2" : "#fff7ed";
+                return (
+                  <div
+                    key={c.id}
+                    style={{
+                      padding: "12px 14px",
+                      borderRight: i % 2 === 0 ? "1px solid #f3f4f6" : "none",
+                      borderBottom: "1px solid #f3f4f6",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{c.name}</span>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          padding: "2px 7px",
+                          borderRadius: 99,
+                          background: tierBg,
+                          color: tierColor,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {c.churnTier}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>
+                      Health score: <span style={{ fontWeight: 700, color: tierColor }}>{c.healthScore}</span>
+                    </div>
+                    <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 6 }}>
+                      Health score below threshold — action needed
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: "#7c3aed",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      View →
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Main grid */}
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
@@ -333,18 +624,65 @@ export default function Dashboard() {
                   { label: "Auto-approved", value: overnightSummary.messagesAutoApproved, color: "#4F46E5" },
                   { label: "Trust changes", value: overnightSummary.trustChanges, color: "#d97706" },
                   { label: "Campaign acts", value: overnightSummary.campaignChanges, color: "#7c3aed" },
-                ].map((s) => (
-                  <div key={s.label} style={{ textAlign: "center" }}>
+                ].map((s) => {
+                  const isExpanded = expandedOvernightItem === s.label;
+                  const highlights = overnightItemHighlights[s.label] ?? [];
+                  return (
                     <div
-                      className="num-display"
-                      style={{ fontSize: 24, fontWeight: 700, color: s.color }}
+                      key={s.label}
+                      onClick={() => setExpandedOvernightItem(isExpanded ? null : s.label)}
+                      style={{ textAlign: "center", cursor: "pointer" }}
                     >
-                      {s.value}
+                      <div
+                        className="num-display"
+                        style={{ fontSize: 24, fontWeight: 700, color: s.color }}
+                      >
+                        {s.value}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>{s.label}</div>
+                      <div style={{ fontSize: 9, color: s.color, marginTop: 2, fontWeight: 600 }}>
+                        {isExpanded ? "▲" : "▼"}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>{s.label}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+              {/* Expanded overnight item detail */}
+              {expandedOvernightItem && (() => {
+                const highlights = overnightItemHighlights[expandedOvernightItem] ?? overnightSummary.highlights;
+                const displayHighlights = highlights.length > 0 ? highlights : overnightSummary.highlights;
+                return (
+                  <div
+                    style={{
+                      margin: "0 14px 12px",
+                      background: "#f9fafb",
+                      borderRadius: 7,
+                      padding: "10px 12px",
+                      border: "1px solid #f3f4f6",
+                    }}
+                  >
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", marginBottom: 6, textTransform: "uppercase" }}>
+                      {expandedOvernightItem} — Detail
+                    </div>
+                    {displayHighlights.map((h, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          fontSize: 11,
+                          color: "#374151",
+                          padding: "3px 0",
+                          display: "flex",
+                          gap: 6,
+                          alignItems: "flex-start",
+                        }}
+                      >
+                        <span style={{ color: "#d1d5db", flexShrink: 0 }}>›</span>
+                        <span>{h}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
               {overnightSummary.highlights.length > 0 && (
                 <div style={{ padding: "0 14px 12px" }}>
                   {overnightSummary.highlights.map((h, i) => (
@@ -406,11 +744,7 @@ export default function Dashboard() {
               </div>
               <PortfolioHeatMap />
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10 }}>
-                {[
-                  { label: "Autonomous", count: mockClients.filter((c) => c.level === "Autonomous").length, color: "#16a34a", bg: "#f0fdf4" },
-                  { label: "Semi-Auto", count: mockClients.filter((c) => c.level === "SemiAuto").length, color: "#d97706", bg: "#fefce8" },
-                  { label: "Supervised", count: mockClients.filter((c) => c.level === "Supervised").length, color: "#dc2626", bg: "#fef2f2" },
-                ].map((s) => (
+                {portfolioTrends.map((s) => (
                   <div
                     key={s.label}
                     style={{
@@ -424,6 +758,25 @@ export default function Dashboard() {
                   >
                     <div className="num-display" style={{ fontSize: 16, fontWeight: 700, color: s.color }}>{s.count}</div>
                     <div style={{ fontSize: 9, color: s.color, marginTop: 1 }}>{s.label}</div>
+                    <div
+                      style={{
+                        fontSize: 9,
+                        marginTop: 2,
+                        fontWeight: 700,
+                        color:
+                          s.trendDir === "up"
+                            ? "#16a34a"
+                            : s.trendDir === "down"
+                            ? "#dc2626"
+                            : "#9ca3af",
+                      }}
+                    >
+                      {s.trendDir === "up"
+                        ? `+${s.trendVal} ↑`
+                        : s.trendDir === "down"
+                        ? `${s.trendVal} ↓`
+                        : "→"}
+                    </div>
                   </div>
                 ))}
               </div>

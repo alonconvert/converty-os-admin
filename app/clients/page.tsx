@@ -1,10 +1,16 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { mockClients, systemStats } from "@/lib/mock-data";
+import { mockClients, systemStats, canaryDeployment } from "@/lib/mock-data";
 
 type Client = (typeof mockClients)[number];
 type ChurnTier = "green" | "yellow" | "orange" | "red";
+
+// ── Spend rate map ───────────────────────────────────────────────────────────
+
+const spendRateMap: Record<string, number> = {
+  "1": 65, "2": 80, "3": 45, "4": 90, "5": 55, "6": 72, "7": 38, "8": 85,
+};
 
 // ── Color helpers ────────────────────────────────────────────────────────────
 
@@ -318,8 +324,24 @@ export default function Clients() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [openTrustPopover, setOpenTrustPopover] = useState<string | null>(null);
 
+  // New state for filter bar
+  const [clientFilter, setClientFilter] = useState("all");
+  const [clientSearch, setClientSearch] = useState("");
+
+  // New state for inline level dropdown
+  const [localLevels, setLocalLevels] = useState<Record<string, string>>({});
+
+  // New state for bulk selection
+  const [selectedClients, setSelectedClients] = useState<string[]>([]);
+
   const toggleKill = (id: string) => {
     setKilledClients((prev) => prev.includes(id) ? prev.filter((k) => k !== id) : [...prev, id]);
+  };
+
+  const toggleSelectClient = (id: string) => {
+    setSelectedClients((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   };
 
   const attentionClients = mockClients.filter((c) =>
@@ -328,15 +350,59 @@ export default function Clients() {
 
   const supervisedCount = mockClients.filter((c) => c.level === "Supervised").length;
 
+  // Filter logic
+  const filteredClients = mockClients.filter((client) => {
+    // Search filter
+    if (clientSearch && !client.name.includes(clientSearch)) return false;
+
+    // Pill filter
+    if (clientFilter === "all") return true;
+    if (clientFilter === "needs_attention") {
+      return client.churnTier === "orange" || client.churnTier === "red" || client.trustScore < 40 || client.renewalDays < 14;
+    }
+    if (clientFilter === "at_risk") {
+      return client.churnTier === "orange" || client.churnTier === "red";
+    }
+    if (clientFilter === "autonomous") return client.level === "Autonomous";
+    if (clientFilter === "semiauto") return client.level === "SemiAuto";
+    if (clientFilter === "supervised") return client.level === "Supervised";
+    return true;
+  });
+
+  const pillDefs = [
+    { key: "all", label: `All (${systemStats.totalClients})` },
+    {
+      key: "needs_attention",
+      label: `Needs Attention (${mockClients.filter((c) => c.churnTier === "orange" || c.churnTier === "red" || c.trustScore < 40 || c.renewalDays < 14).length})`,
+    },
+    {
+      key: "at_risk",
+      label: `At-Risk (${mockClients.filter((c) => c.churnTier === "orange" || c.churnTier === "red").length})`,
+    },
+    { key: "autonomous", label: `Autonomous (${mockClients.filter((c) => c.level === "Autonomous").length})` },
+    { key: "semiauto", label: `Semi-Auto (${mockClients.filter((c) => c.level === "SemiAuto").length})` },
+    { key: "supervised", label: `Supervised (${mockClients.filter((c) => c.level === "Supervised").length})` },
+  ];
+
+  const allSelected = filteredClients.length > 0 && filteredClients.every((c) => selectedClients.includes(c.id));
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedClients((prev) => prev.filter((id) => !filteredClients.find((c) => c.id === id)));
+    } else {
+      setSelectedClients((prev) => {
+        const toAdd = filteredClients.map((c) => c.id).filter((id) => !prev.includes(id));
+        return [...prev, ...toAdd];
+      });
+    }
+  };
+
   return (
     <div style={{ padding: "18px 20px", maxWidth: 1440 }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0 }}>Clients</h1>
-          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-            {mockClients.length} shown of {systemStats.totalClients} total
-          </p>
         </div>
         <button
           style={{
@@ -346,6 +412,38 @@ export default function Clients() {
         >
           + Onboard Client
         </button>
+      </div>
+
+      {/* Filter bar — pills + search */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {pillDefs.map((pill) => (
+            <button
+              key={pill.key}
+              onClick={() => setClientFilter(pill.key)}
+              style={{
+                padding: "4px 10px", borderRadius: 99, fontSize: 11, fontWeight: 600,
+                border: "none", cursor: "pointer",
+                background: clientFilter === pill.key ? "#4F46E5" : "#f3f4f6",
+                color: clientFilter === pill.key ? "#fff" : "#6b7280",
+              }}
+            >
+              {pill.label}
+            </button>
+          ))}
+        </div>
+        <input
+          type="text"
+          value={clientSearch}
+          onChange={(e) => setClientSearch(e.target.value)}
+          placeholder="חיפוש לקוח..."
+          dir="rtl"
+          style={{
+            fontSize: 11, padding: "5px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
+            background: "#fff", color: "#374151", fontFamily: "Heebo, sans-serif",
+            outline: "none", width: 160,
+          }}
+        />
       </div>
 
       {/* Summary row */}
@@ -447,12 +545,54 @@ export default function Clients() {
         </div>
       )}
 
+      {/* Bulk action toolbar */}
+      {selectedClients.length > 0 && (
+        <div
+          style={{
+            position: "sticky", top: 0, zIndex: 10,
+            background: "#4F46E5", color: "#fff",
+            borderRadius: 8, padding: "8px 14px",
+            display: "flex", alignItems: "center", gap: 10,
+            marginBottom: 10,
+          }}
+        >
+          <span style={{ fontSize: 12, fontWeight: 600 }}>{selectedClients.length} clients selected</span>
+          <button
+            onClick={() => console.log("Pause AI for", selectedClients)}
+            style={{ fontSize: 11, padding: "3px 10px", background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 5, color: "#fff", cursor: "pointer", fontWeight: 600 }}
+          >
+            Pause AI ({selectedClients.length})
+          </button>
+          <button
+            onClick={() => console.log("Export CSV for", selectedClients)}
+            style={{ fontSize: 11, padding: "3px 10px", background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 5, color: "#fff", cursor: "pointer" }}
+          >
+            Export CSV
+          </button>
+          <button
+            onClick={() => setSelectedClients([])}
+            style={{ fontSize: 11, padding: "3px 10px", background: "transparent", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 5, color: "rgba(255,255,255,0.8)", cursor: "pointer" }}
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       {/* Client table */}
       <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
         <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #f3f4f6", background: "#fafafa" }}>
-              {["Client", "Trust Score", "Health", "Leads / Week", "CPL vs Target", "Budget / mo", "Last Active", "Kill"].map((h) => (
+              {/* Checkbox header */}
+              <th style={{ padding: "9px 12px", width: 32 }}>
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleSelectAll}
+                  style={{ cursor: "pointer" }}
+                />
+              </th>
+              {["Client", "Trust Score", "Health", "Leads / Week", "CPL vs Target", "Budget / mo", "Last Active", "Canary", "Kill"].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -467,13 +607,25 @@ export default function Clients() {
             </tr>
           </thead>
           <tbody>
-            {mockClients.map((client) => {
+            {filteredClients.map((client) => {
               const tc = trustColors[client.level as keyof typeof trustColors];
               const hc = healthColors[client.churnTier as ChurnTier];
               const isKilled = killedClients.includes(client.id);
+              const isSelected = selectedClients.includes(client.id);
               const cplAboveTarget = client.cplTarget;
               const estimatedCpl = Math.round(client.monthlyBudget / Math.max(1, client.leadsWeekly.reduce((a, b) => a + b, 0)));
               const cplOk = estimatedCpl <= cplAboveTarget;
+
+              // Spend rate
+              const spendRate = spendRateMap[client.id] ?? 60;
+              const spendColor = spendRate <= 70 ? "#059669" : spendRate <= 85 ? "#d97706" : "#dc2626";
+
+              // Canary
+              const isCanary = canaryDeployment.clients.includes(client.name);
+
+              // Current level (local override or original)
+              const currentLevel = localLevels[client.id] || client.level;
+              const levelTc = trustColors[currentLevel as keyof typeof trustColors] || tc;
 
               return (
                 <tr
@@ -482,10 +634,20 @@ export default function Clients() {
                   style={{
                     opacity: isKilled ? 0.55 : 1,
                     borderBottom: "1px solid #f9fafb",
-                    background: isKilled ? "#fafafa" : "transparent",
+                    background: isSelected ? "#eef2ff" : isKilled ? "#fafafa" : "transparent",
                   }}
                   onClick={() => setSelectedClient(client)}
                 >
+                  {/* Checkbox */}
+                  <td style={{ padding: "9px 12px" }} onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelectClient(client.id)}
+                      style={{ cursor: "pointer" }}
+                    />
+                  </td>
+
                   {/* Client name */}
                   <td style={{ padding: "9px 12px" }}>
                     <div style={{ fontWeight: 600, color: "#111827", display: "flex", alignItems: "center", gap: 5 }}>
@@ -520,12 +682,26 @@ export default function Clients() {
                           {client.trustScore}
                         </button>
                       </div>
-                      <div style={{ fontSize: 9, marginTop: 2 }}>
-                        <span style={{ fontSize: 10, padding: "1px 5px", borderRadius: 99, background: tc.bg, color: tc.text, fontWeight: 600 }}>
-                          {client.level}
-                        </span>
+                      <div style={{ fontSize: 9, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                        {/* Inline level dropdown */}
+                        <select
+                          value={currentLevel}
+                          onChange={(e) => {
+                            setLocalLevels((prev) => ({ ...prev, [client.id]: e.target.value }));
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            fontSize: 10, padding: "1px 5px", borderRadius: 99,
+                            background: levelTc.bg, color: levelTc.text,
+                            border: `1px solid ${levelTc.border}`, cursor: "pointer",
+                          }}
+                        >
+                          <option value="Supervised">Supervised</option>
+                          <option value="SemiAuto">SemiAuto</option>
+                          <option value="Autonomous">Autonomous</option>
+                        </select>
                         {client.thresholdProximity && (
-                          <span style={{ fontSize: 9, color: "#d97706", marginLeft: 4 }}>↑{client.thresholdProximity}pts</span>
+                          <span style={{ fontSize: 9, color: "#d97706" }}>↑{client.thresholdProximity}pts</span>
                         )}
                       </div>
                       {openTrustPopover === client.id && (
@@ -563,12 +739,17 @@ export default function Clients() {
                     <div dir="ltr" style={{ fontSize: 10, color: "#9ca3af" }}>target ₪{cplAboveTarget}</div>
                   </td>
 
-                  {/* Budget */}
+                  {/* Budget + spend rate bar */}
                   <td style={{ padding: "9px 12px" }}>
                     <div dir="ltr" style={{ fontSize: 12, color: "#374151" }}>₪{client.monthlyBudget.toLocaleString()}</div>
                     {client.renewalDays < 14 && (
                       <div style={{ fontSize: 10, color: "#dc2626" }}>Renews {client.renewalDays}d</div>
                     )}
+                    {/* Spend progress bar */}
+                    <div style={{ width: 48, height: 3, background: "#f3f4f6", borderRadius: 99, marginTop: 4, overflow: "hidden" }}>
+                      <div style={{ width: `${spendRate}%`, height: "100%", background: spendColor, borderRadius: 99 }} />
+                    </div>
+                    <div style={{ fontSize: 9, color: "#9ca3af", marginTop: 1 }}>{spendRate}% pace</div>
                   </td>
 
                   {/* Last active */}
@@ -576,6 +757,21 @@ export default function Clients() {
                     <div style={{ fontSize: 11, color: "#6b7280" }}>{client.lastActivity}</div>
                     {client.lastInteractionDays > 14 && (
                       <div style={{ fontSize: 10, color: "#dc2626" }}>⚠️ Decaying</div>
+                    )}
+                  </td>
+
+                  {/* Canary badge */}
+                  <td style={{ padding: "9px 12px" }}>
+                    {isCanary ? (
+                      <span style={{
+                        fontSize: 9, padding: "1px 5px", borderRadius: 3,
+                        background: "#faf5ff", color: "#7c3aed", fontWeight: 700,
+                        display: "inline-block",
+                      }}>
+                        ⚗ Canary
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 11, color: "#d1d5db" }}>—</span>
                     )}
                   </td>
 

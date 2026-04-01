@@ -25,6 +25,48 @@ function tierSort(a: Conversation, b: Conversation) {
   return (order[a.tier] ?? 9) - (order[b.tier] ?? 9);
 }
 
+// ── Scheduling context helper ────────────────────────────────────────────────
+
+function getSchedulingContext(): { text: string; style: React.CSSProperties } | null {
+  const now = new Date();
+  const dayName = new Intl.DateTimeFormat("he-IL", {
+    timeZone: "Asia/Jerusalem",
+    weekday: "long",
+  }).format(now);
+  const hour = parseInt(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Jerusalem",
+      hour: "numeric",
+      hour12: false,
+    }).format(now),
+    10
+  );
+
+  if (dayName === "יום שישי") {
+    return {
+      text: "Follow-up: Sunday 09:00 IST",
+      style: {
+        fontSize: 10, padding: "2px 7px", borderRadius: 4,
+        background: "#fffbeb", color: "#92400e",
+        display: "inline-block", marginTop: 4,
+      },
+    };
+  }
+
+  if (hour >= 17) {
+    return {
+      text: "Off-hours — follow-up tomorrow 09:00 IST",
+      style: {
+        fontSize: 10, padding: "2px 7px", borderRadius: 4,
+        background: "#f3f4f6", color: "#6b7280",
+        display: "inline-block", marginTop: 4,
+      },
+    };
+  }
+
+  return null;
+}
+
 // ── Countdown ────────────────────────────────────────────────────────────────
 
 function AutoSendCountdown({ minutesRemaining }: { minutesRemaining: number }) {
@@ -76,6 +118,13 @@ function ConvCard({ conv, hideClientName, flashing, onApprove, onReject }: ConvC
   const [editMode, setEditMode] = useState(false);
   const [editText, setEditText] = useState(conv.draft ?? "");
 
+  const schedulingCtx = getSchedulingContext();
+
+  // Confidence bar
+  const conf = conv.confidence;
+  const confPct = Math.round(conf * 100);
+  const confColor = conf >= 0.85 ? "#059669" : conf >= 0.70 ? "#d97706" : "#dc2626";
+
   return (
     <div
       className={`${isT4 ? "t4-pulse" : ""}`}
@@ -125,15 +174,36 @@ function ConvCard({ conv, hideClientName, flashing, onApprove, onReject }: ConvC
               </p>
             </div>
 
+            {/* Scheduling context badge (for non-auto items) */}
+            {!isAutoQueued && schedulingCtx && (
+              <div style={schedulingCtx.style}>{schedulingCtx.text}</div>
+            )}
+
             {/* AI Draft / editing */}
             {conv.draft && !editMode && (
-              <div style={{ background: "#eef2ff", border: "1px solid #c7d2fe", borderRadius: 7, padding: "8px 11px", marginBottom: 8 }}>
+              <div style={{ background: "#eef2ff", border: "1px solid #c7d2fe", borderRadius: 7, padding: "8px 11px", marginBottom: 8, marginTop: (!isAutoQueued && schedulingCtx) ? 6 : 0 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                   <span style={{ fontSize: 10, fontWeight: 600, color: "#4F46E5" }}>AI Draft</span>
+                  {/* Confidence bar */}
                   {conv.confidence > 0 && (
-                    <span style={{ fontSize: 10, color: conv.confidence >= 0.85 ? "#059669" : "#d97706", fontWeight: 700 }}>
-                      {Math.round(conv.confidence * 100)}% confidence
-                    </span>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+                      <span style={{ fontSize: 10, color: confColor, fontWeight: 700 }}>{confPct}%</span>
+                      <div style={{ width: 120, height: 6, background: "#f3f4f6", borderRadius: 99, position: "relative" }}>
+                        <div
+                          style={{
+                            width: `${confPct}%`, height: "100%",
+                            background: confColor, borderRadius: 99,
+                          }}
+                        />
+                        {/* 85% threshold marker */}
+                        <div
+                          style={{
+                            position: "absolute", left: "85%", top: -2, bottom: -2,
+                            width: 1, background: "#6b7280",
+                          }}
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
                 <p dir="rtl" style={{ fontSize: 12, color: "#312e81", margin: 0, fontFamily: "Heebo, sans-serif", textAlign: "right", lineHeight: 1.6 }}>
@@ -195,10 +265,13 @@ function ConvCard({ conv, hideClientName, flashing, onApprove, onReject }: ConvC
               </div>
             )}
 
-            {/* Auto-queued countdown */}
+            {/* Auto-queued countdown + scheduling badge */}
             {isAutoQueued && conv.autoSendMinutes !== null && (
               <div style={{ marginTop: 4 }}>
                 <AutoSendCountdown minutesRemaining={conv.autoSendMinutes} />
+                {schedulingCtx && (
+                  <div style={schedulingCtx.style}>{schedulingCtx.text}</div>
+                )}
               </div>
             )}
           </div>
@@ -257,6 +330,128 @@ function ConvCard({ conv, hideClientName, flashing, onApprove, onReject }: ConvC
   );
 }
 
+// ── New Message Modal ─────────────────────────────────────────────────────────
+
+interface NewMsgModalProps {
+  allClientNames: string[];
+  onClose: () => void;
+}
+
+function NewMsgModal({ allClientNames, onClose }: NewMsgModalProps) {
+  const [newMsgClient, setNewMsgClient] = useState("");
+  const [newMsgText, setNewMsgText] = useState("");
+  const [newMsgTier, setNewMsgTier] = useState<string>("T1");
+  const [sendWithAI, setSendWithAI] = useState(false);
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 50,
+        background: "rgba(0,0,0,0.4)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "#fff", borderRadius: 12, padding: 20, width: 440,
+          boxShadow: "0 20px 48px rgba(0,0,0,0.18)",
+          display: "flex", flexDirection: "column", gap: 12,
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>+ New Message</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>×</button>
+        </div>
+
+        {/* Client selector */}
+        <div>
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Client</label>
+          <select
+            value={newMsgClient}
+            onChange={(e) => setNewMsgClient(e.target.value)}
+            style={{ width: "100%", fontSize: 12, padding: "6px 9px", borderRadius: 6, border: "1px solid #e5e7eb", background: "#fff", color: "#374151" }}
+          >
+            <option value="">Select client...</option>
+            {allClientNames.map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </div>
+
+        {/* Message textarea */}
+        <div>
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Message</label>
+          <textarea
+            dir="rtl"
+            value={newMsgText}
+            onChange={(e) => setNewMsgText(e.target.value)}
+            placeholder="כתוב הודעה…"
+            rows={4}
+            style={{
+              width: "100%", fontSize: 12, padding: "8px 11px", borderRadius: 7,
+              border: "1px solid #e5e7eb", outline: "none", resize: "vertical",
+              fontFamily: "Heebo, sans-serif", textAlign: "right", direction: "rtl",
+              background: "#fafafa", boxSizing: "border-box",
+            }}
+          />
+        </div>
+
+        {/* Tier selector */}
+        <div>
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", display: "block", marginBottom: 4 }}>Tier</label>
+          <div style={{ display: "flex", gap: 6 }}>
+            {["T1", "T2", "T3", "T4"].map((t) => {
+              const ts = TIER_STYLE[t];
+              return (
+                <button
+                  key={t}
+                  onClick={() => setNewMsgTier(t)}
+                  style={{
+                    fontSize: 11, padding: "3px 10px", borderRadius: 5, fontWeight: 600,
+                    border: "none", cursor: "pointer",
+                    background: newMsgTier === t ? ts.color : "#f3f4f6",
+                    color: newMsgTier === t ? "#fff" : "#6b7280",
+                  }}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Send with AI toggle */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <input
+            type="checkbox"
+            id="sendWithAI"
+            checked={sendWithAI}
+            onChange={(e) => setSendWithAI(e.target.checked)}
+            style={{ cursor: "pointer" }}
+          />
+          <label htmlFor="sendWithAI" style={{ fontSize: 12, color: "#374151", cursor: "pointer" }}>Send with AI</label>
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <button
+            onClick={onClose}
+            style={{ fontSize: 12, padding: "6px 14px", borderRadius: 6, background: "#f3f4f6", color: "#6b7280", border: "none", cursor: "pointer" }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => { console.log("Send message", { newMsgClient, newMsgText, newMsgTier, sendWithAI }); onClose(); }}
+            style={{ fontSize: 12, padding: "6px 14px", borderRadius: 6, background: "#16a34a", color: "#fff", border: "none", cursor: "pointer", fontWeight: 600 }}
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function Conversations() {
@@ -266,6 +461,7 @@ export default function Conversations() {
   const [groupExpanded, setGroupExpanded] = useState<Record<string, boolean>>({});
   const [tierFilter, setTierFilter] = useState("All Tiers");
   const [clientFilter, setClientFilter] = useState("All Clients");
+  const [newMsgOpen, setNewMsgOpen] = useState(false);
 
   const allClientNames = useMemo(
     () => Array.from(new Set(mockConversations.map((c) => c.clientName))).sort(),
@@ -298,6 +494,16 @@ export default function Conversations() {
 
   const chronological = useMemo(() => [...activeConvs].sort(tierSort), [activeConvs]);
 
+  // Split chronological into attention and routine
+  const attentionConvs = useMemo(
+    () => chronological.filter((c) => c.tier === "T4" || c.tier === "T3"),
+    [chronological]
+  );
+  const routineConvs = useMemo(
+    () => chronological.filter((c) => c.tier !== "T4" && c.tier !== "T3"),
+    [chronological]
+  );
+
   function isExpanded(name: string) { return groupExpanded[name] !== false; }
   function toggleGroup(name: string) { setGroupExpanded((p) => ({ ...p, [name]: !isExpanded(name) })); }
 
@@ -320,6 +526,8 @@ export default function Conversations() {
     T1: activeConvs.filter((c) => c.tier === "T1").length,
   };
 
+  const hasAttention = tierCounts.T4 > 0 || tierCounts.T3 > 0;
+
   return (
     <>
       <style>{`
@@ -329,6 +537,10 @@ export default function Conversations() {
         }
         .t4-pulse { animation: t4BorderPulse 1.8s ease-in-out infinite; }
       `}</style>
+
+      {newMsgOpen && (
+        <NewMsgModal allClientNames={allClientNames} onClose={() => setNewMsgOpen(false)} />
+      )}
 
       <div style={{ padding: "18px 20px", maxWidth: 1440 }}>
         {/* Header */}
@@ -341,6 +553,18 @@ export default function Conversations() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* + New Message button */}
+            <button
+              onClick={() => setNewMsgOpen(true)}
+              style={{
+                fontSize: 11, padding: "5px 12px", borderRadius: 6,
+                background: "#4F46E5", color: "#fff", border: "none",
+                fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              + New Message
+            </button>
+
             <select
               value={tierFilter}
               onChange={(e) => setTierFilter(e.target.value)}
@@ -407,6 +631,19 @@ export default function Conversations() {
         {/* Grouped view */}
         {viewMode === "grouped" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Attention banner in grouped view */}
+            {hasAttention && (
+              <div
+                style={{
+                  background: "#fef2f2", borderLeft: "4px solid #dc2626",
+                  padding: "6px 14px", fontSize: 11, fontWeight: 700, color: "#dc2626",
+                  borderRadius: 4,
+                }}
+              >
+                ⚠ REQUIRES ATTENTION — {tierCounts.T4} T4 + {tierCounts.T3} T3 messages
+              </div>
+            )}
+
             {groups.length === 0 && (
               <div style={{ textAlign: "center", padding: "40px", color: "#9ca3af", fontSize: 13 }}>
                 <div style={{ fontSize: 24, marginBottom: 8 }}>✓</div>
@@ -489,15 +726,54 @@ export default function Conversations() {
             {chronological.length === 0 && (
               <div style={{ textAlign: "center", padding: "40px", color: "#9ca3af", fontSize: 13 }}>No pending conversations.</div>
             )}
-            {chronological.map((conv) => (
-              <ConvCard
-                key={conv.id}
-                conv={conv}
-                flashing={flashing.includes(conv.id)}
-                onApprove={() => handleApprove(conv.id)}
-                onReject={() => handleReject(conv.id)}
-              />
-            ))}
+
+            {/* REQUIRES ATTENTION section */}
+            {attentionConvs.length > 0 && (
+              <>
+                <div
+                  style={{
+                    background: "#fef2f2", borderLeft: "4px solid #dc2626",
+                    padding: "6px 14px", fontSize: 11, fontWeight: 700, color: "#dc2626",
+                    borderRadius: 4,
+                  }}
+                >
+                  REQUIRES ATTENTION ({attentionConvs.length})
+                </div>
+                {attentionConvs.map((conv) => (
+                  <ConvCard
+                    key={conv.id}
+                    conv={conv}
+                    flashing={flashing.includes(conv.id)}
+                    onApprove={() => handleApprove(conv.id)}
+                    onReject={() => handleReject(conv.id)}
+                  />
+                ))}
+              </>
+            )}
+
+            {/* ROUTINE QUEUE section */}
+            {routineConvs.length > 0 && (
+              <>
+                <div
+                  style={{
+                    background: "#f9fafb", borderLeft: "4px solid #9ca3af",
+                    padding: "6px 14px", fontSize: 11, fontWeight: 700, color: "#6b7280",
+                    borderRadius: 4,
+                  }}
+                >
+                  ROUTINE QUEUE ({routineConvs.length})
+                </div>
+                {routineConvs.map((conv) => (
+                  <ConvCard
+                    key={conv.id}
+                    conv={conv}
+                    flashing={flashing.includes(conv.id)}
+                    onApprove={() => handleApprove(conv.id)}
+                    onReject={() => handleReject(conv.id)}
+                  />
+                ))}
+              </>
+            )}
           </div>
         )}
       </div>

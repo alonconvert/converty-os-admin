@@ -317,17 +317,27 @@ export const mockClients = [
 ];
 
 // ─── Conversations ──────────────────────────────────────────────────────────
+//
+// Three types of conversations the operator actually sees:
+//   'lead_intake'  — AI drafting first-contact outreach to a new lead ON BEHALF of a client
+//   'own_lead'     — Potential new agency client inquiring about Converty's services
+//   'client_comm'  — Routine communication between Alon and one of his 37 business-owner clients
+//
+// What is NOT here: conversations between agency clients and their own leads/customers
+// (those are handled by the client directly and are not visible in this system).
 
 export const mockConversations = [
+  // ── Lead intake for גרינברג נדל"ן ──────────────────────────────────────────
   {
     id: 'c1',
+    conversationType: 'lead_intake' as const,
     clientName: 'גרינברג נדל"ן',
-    leadName: 'דוד אברהם',
+    leadName: 'אמיר בן דוד',          // new lead that arrived for the client
     phone: '+972541234567',
-    lastMessage: 'אני מעוניין בדירה ב-3 חדרים באזור מרכז',
-    draft: 'שלום דוד! שמחים לשמוע שאתה מתעניין. יש לנו כרגע מספר דירות מצוינות ב-3 חדרים במרכז הארץ. אפשר לקבוע פגישה השבוע?',
+    lastMessage: 'ליד נכנס מגוגל — מעוניין בדירת 3 חדרים במרכז, תקציב ~2M₪',
+    draft: 'שלום אמיר! קיבלנו את פנייתך לגרינברג נדל"ן. אנחנו מתמחים בדירות 3-4 חדרים במרכז הארץ ויש לנו עכשיו כמה נכסים מעולים בטווח התקציב שלך. מתי נוח לך לשיחה קצרה של 10 דקות?',
     tier: 'T1',
-    confidence: 0.91,
+    confidence: 0.92,
     trustLevel: 'SemiAuto',
     status: 'pending_approval',
     age: '4 min',
@@ -336,30 +346,15 @@ export const mockConversations = [
     autoSendMinutes: 11,
     trustDeltaOnApprove: +2,
   },
+  // ── Routine client communication: ביטוח ישיר פלוס owner upset ──────────────
   {
     id: 'c2',
-    clientName: 'ד"ר מירי אופיר',
-    leadName: 'רונית שמש',
-    phone: '+972527654321',
-    lastMessage: 'כמה עולה טיפול שורש? שמעתי שאצלכם זה מאוד יקר',
-    draft: 'שלום רונית! המחירים שלנו תחרותיים מאוד לאזור. טיפול שורש נע בין 800-1,200 ₪ תלוי במורכבות. נשמח לתאם ייעוץ ראשוני ללא עלות!',
-    tier: 'T2',
-    confidence: 0.78,
-    trustLevel: 'Autonomous',
-    status: 'pending_approval',
-    age: '9 min',
-    ageMinutes: 9,
-    sentiment: 'neutral',
-    autoSendMinutes: null as number | null,
-    trustDeltaOnApprove: +2,
-  },
-  {
-    id: 'c3',
+    conversationType: 'client_comm' as const,
     clientName: 'ביטוח ישיר פלוס',
-    leadName: 'יוסי מזרחי',
-    phone: '+972501112233',
-    lastMessage: 'אתם שולחים לי ספאם! רציתי לבדוק מחירים לא להירשם!',
-    draft: null,
+    leadName: 'יניב אוחנה',            // the insurance company owner / contact
+    phone: '+972527654321',
+    lastMessage: 'מה קורה עם הפייסבוק השבוע? CPL קפץ ל-95 ומעלה והייתם מבטיחים 85',
+    draft: null,                        // Alon handles this personally — no AI draft
     tier: 'T4',
     confidence: 0,
     trustLevel: 'Supervised',
@@ -373,21 +368,61 @@ export const mockConversations = [
     reentryAckSent: false,
     trustDeltaOnApprove: 0,
   },
+  // ── Converty's own lead: potential new agency client ────────────────────────
+  {
+    id: 'c3',
+    conversationType: 'own_lead' as const,
+    clientName: 'Converty | שיווק עצמי',
+    leadName: 'רועי שמיר',             // potential new agency client
+    phone: '+972501112233',
+    lastMessage: 'ראיתי את המודעה — אני מנהל מרפאת פיזיותרפיה ב-3 סניפים, כמה עולה ניהול קמפיינים?',
+    draft: 'שלום רועי! שמחים שפנית. אנחנו מנהלים Google + Meta לעסקים ישראליים ומתמחים בבריאות ורפואה. יש לנו ניסיון עם קליניקות דומות ל-CPL של 80-110₪ לליד. אשמח לשיחת היכרות קצרה — מתי נוח?',
+    tier: 'T1',
+    confidence: 0.89,
+    trustLevel: 'Autonomous',
+    status: 'pending_approval',
+    age: '9 min',
+    ageMinutes: 9,
+    sentiment: 'positive',
+    autoSendMinutes: null as number | null,
+    trustDeltaOnApprove: +2,
+  },
+  // ── Routine client communication: מרפאת שיניים לוי renewal + satisfied ──────
   {
     id: 'c4',
-    clientName: 'עורך דין כהן',
-    leadName: 'נועה לוי',
+    conversationType: 'client_comm' as const,
+    clientName: 'מרפאת שיניים לוי',
+    leadName: 'ד"ר אורן לוי',          // dentist / clinic owner
     phone: '+972549876543',
-    lastMessage: 'האם אתם מטפלים גם בדיני עבודה?',
-    draft: 'שלום נועה! כן, אנחנו מתמחים גם בדיני עבודה — פיטורים, הסכמי עבודה, תביעות. יש לי זמן פנוי ביום שלישי אם תרצי להגיע לייעוץ ראשוני.',
+    lastMessage: 'קיבלנו 7 פניות השבוע ו-4 נסגרו כבר! מרוצים מאוד. מתי מחדשים?',
+    draft: 'ד"ר לוי, שמחים לשמוע! החידוש האוטומטי ב-18 לאפריל — נשלח לך סיכום ביצועים מלא עם השוואה לחודש הקודם כמה ימים לפני. תודה על האמון!',
     tier: 'T1',
-    confidence: 0.88,
-    trustLevel: 'SemiAuto',
+    confidence: 0.87,
+    trustLevel: 'Autonomous',
     status: 'auto_queued',
     age: '14 min',
     ageMinutes: 14,
     sentiment: 'positive',
     autoSendMinutes: 1,
+    trustDeltaOnApprove: +2,
+  },
+  // ── Lead intake for עורך דין כהן ────────────────────────────────────────────
+  {
+    id: 'c5',
+    conversationType: 'lead_intake' as const,
+    clientName: 'עורך דין כהן',
+    leadName: 'נועה לוי',              // new lead that arrived for the lawyer
+    phone: '+972552223344',
+    lastMessage: 'ליד נכנס מגוגל — שאלה על תביעת פיטורים, הודיעה שנפלטה ממקום עבודתה',
+    draft: 'שלום נועה! קיבלנו את פנייתך למשרד עורך דין כהן. אנחנו מתמחים בדיני עבודה ונשמח לעזור בעניין הפיטורים. ייעוץ ראשוני ללא עלות — אפשר לקבוע לשבוע הקרוב?',
+    tier: 'T1',
+    confidence: 0.85,
+    trustLevel: 'SemiAuto',
+    status: 'pending_approval',
+    age: '18 min',
+    ageMinutes: 18,
+    sentiment: 'neutral',
+    autoSendMinutes: 7,
     trustDeltaOnApprove: +2,
   },
 ];
@@ -549,16 +584,18 @@ export const mockCampaigns = [
 // ─── System logs ────────────────────────────────────────────────────────────
 
 export const mockSystemLogs = [
-  { id: 'log1', type: 'ai', message: 'Claude drafted reply for גרינברג נדל"ן / דוד אברהם', time: '4 min ago', level: 'info', cost: '₪0.08' },
-  { id: 'log2', type: 'lead', message: 'New lead ingested: חנה מוזס → ביטוח ישיר פלוס', time: '6 min ago', level: 'info', cost: null },
-  { id: 'log3', type: 'alert', message: 'T4 message detected: יוסי מזרחי — human takeover triggered', time: '8 min ago', level: 'warn', cost: null },
-  { id: 'log4', type: 'ai', message: 'Auto-approval sent: נועה לוי / עורך דין כהן (confidence 0.88)', time: '14 min ago', level: 'info', cost: '₪0.05' },
-  { id: 'log5', type: 'system', message: 'Kill switch checked: system active', time: '15 min ago', level: 'info', cost: null },
-  { id: 'log6', type: 'campaign', message: 'Campaign sync completed: 6 campaigns refreshed', time: '22 min ago', level: 'info', cost: null },
-  { id: 'log7', type: 'alert', message: 'Trust score drop: ביטוח ישיר פלוס 38→25 (complaint)', time: '1h ago', level: 'warn', cost: null },
-  { id: 'log8', type: 'ai', message: 'Morning briefing generated for operator', time: '2h ago', level: 'info', cost: '₪0.14' },
-  { id: 'log9', type: 'lead', message: 'New lead ingested: אמיר בן דוד → גרינברג נדל"ן', time: '2.5h ago', level: 'info', cost: null },
-  { id: 'log10', type: 'campaign', message: 'Bid adjustment: מרפאת שיניים לוי campaign -8% mobile', time: '2d ago', level: 'info', cost: null },
+  { id: 'log1', type: 'ai', message: 'Claude drafted lead outreach for גרינברג נדל"ן → אמיר בן דוד (conf 0.92)', time: '4 min ago', level: 'info', cost: '₪0.08' },
+  { id: 'log2', type: 'lead', message: 'New lead ingested: אמיר בן דוד → גרינברג נדל"ן (Google)', time: '4 min ago', level: 'info', cost: null },
+  { id: 'log3', type: 'alert', message: 'T4 client message: יניב אוחנה (ביטוח ישיר פלוס) — CPL complaint, human takeover', time: '2 min ago', level: 'warn', cost: null },
+  { id: 'log4', type: 'lead', message: 'New own lead: רועי שמיר (פיזיותרפיה 3 סניפים) — Converty inquiry', time: '9 min ago', level: 'info', cost: null },
+  { id: 'log5', type: 'ai', message: 'Claude drafted Converty reply for רועי שמיר (conf 0.89)', time: '9 min ago', level: 'info', cost: '₪0.06' },
+  { id: 'log6', type: 'ai', message: 'Auto-queued client reply: ד"ר אורן לוי / מרפאת שיניים לוי (conf 0.87)', time: '14 min ago', level: 'info', cost: '₪0.05' },
+  { id: 'log7', type: 'system', message: 'Kill switch checked: system active', time: '15 min ago', level: 'info', cost: null },
+  { id: 'log8', type: 'campaign', message: 'Campaign sync completed: 6 campaigns refreshed', time: '22 min ago', level: 'info', cost: null },
+  { id: 'log9', type: 'alert', message: 'Trust score drop: ביטוח ישיר פלוס 38→25 (client complaint logged)', time: '1h ago', level: 'warn', cost: null },
+  { id: 'log10', type: 'ai', message: 'Morning briefing generated for operator', time: '2h ago', level: 'info', cost: '₪0.14' },
+  { id: 'log11', type: 'lead', message: 'New lead ingested: נועה לוי → עורך דין כהן (Google)', time: '18 min ago', level: 'info', cost: null },
+  { id: 'log12', type: 'campaign', message: 'Bid adjustment: מרפאת שיניים לוי -8% mobile', time: '2d ago', level: 'info', cost: null },
 ];
 
 // ─── System stats ───────────────────────────────────────────────────────────
@@ -631,11 +668,12 @@ export const overnightSummary = {
 export const autoApprovalQueue = [
   {
     id: 'aq1',
-    clientName: 'עורך דין כהן',
-    leadName: 'נועה לוי',
+    conversationType: 'client_comm' as const,
+    clientName: 'מרפאת שיניים לוי',
+    leadName: 'ד"ר אורן לוי',          // dentist / clinic owner (routine client comms)
     minutesRemaining: 1,
-    confidence: 88,
-    draft: 'שלום נועה! כן, אנחנו מתמחים גם בדיני עבודה...',
+    confidence: 87,
+    draft: 'ד"ר לוי, שמחים לשמוע! החידוש האוטומטי ב-18 לאפריל — נשלח לך סיכום ביצועים מלא לפני.',
     tier: 'T1',
   },
 ];

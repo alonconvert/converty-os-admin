@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { mockCampaigns } from "@/lib/mock-data";
+import { mockCampaigns, canaryDeployment } from "@/lib/mock-data";
 import type { CampaignRiskTier } from "@/lib/mock-data";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -32,6 +32,49 @@ function CPLSparkline({ data, target }: { data: number[]; target: number }) {
       <line x1="0" y1={targetY} x2={w} y2={targetY} stroke="#e5e7eb" strokeWidth="1" strokeDasharray="3,2" />
       <polyline points={pts.join(" ")} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+// ── 5-state Campaign Status Chip ──────────────────────────────────────────────
+
+function CampaignStatusChip({ status, learningPhase, pendingChange, budgetPct }: {
+  status: string;
+  learningPhase: boolean;
+  pendingChange: boolean;
+  budgetPct: number;
+}) {
+  if (budgetPct >= 95) {
+    return (
+      <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#fef2f2", color: "#dc2626", border: "1px solid #fca5a5", whiteSpace: "nowrap" }}>
+        BUDGET EXHAUSTED
+      </span>
+    );
+  }
+  if (learningPhase) {
+    return (
+      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe" }}>
+        🎓 LEARNING
+      </span>
+    );
+  }
+  if (pendingChange) {
+    return (
+      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#fffbeb", color: "#d97706", border: "1px solid #fde68a" }}>
+        ⏳ PENDING
+      </span>
+    );
+  }
+  if (status === "active") {
+    return (
+      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}>
+        ● ACTIVE
+      </span>
+    );
+  }
+  return (
+    <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#f3f4f6", color: "#6b7280", border: "1px solid #e5e7eb" }}>
+      ⏸ PAUSED
+    </span>
   );
 }
 
@@ -123,6 +166,8 @@ export default function Campaigns() {
   const [platform, setPlatform] = useState("All Platforms");
   const [actionModal, setActionModal] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<string[]>([]);
+  const [expandedAction, setExpandedAction] = useState<string | null>(null);
+  const [canaryToast, setCanaryToast] = useState<string | null>(null);
 
   const filtered = mockCampaigns.filter((c) => {
     if (platform === "Google Ads" && c.platform !== "google") return false;
@@ -136,6 +181,33 @@ export default function Campaigns() {
   const avgCpl = Math.round(totalSpend / Math.max(1, totalLeads));
 
   const pendingChanges = mockCampaigns.filter((c) => c.pendingAiChange && !dismissed.includes(c.id));
+
+  // Budget Pace calculations
+  const daysElapsed = 14;
+  const daysInMonth = 30;
+  const pacePct = Math.round((daysElapsed / daysInMonth) * 100);
+  const spendPct = Math.round((totalSpend / totalBudget) * 100);
+  const paceDelta = spendPct - pacePct;
+
+  const paceBorderColor =
+    paceDelta > 10 ? "#fca5a5" :
+    paceDelta < -10 ? "#fde68a" :
+    "#e5e7eb";
+
+  const paceSubColor =
+    Math.abs(paceDelta) <= 5 ? "#16a34a" :
+    paceDelta > 5 ? "#dc2626" :
+    "#d97706";
+
+  const paceSubText =
+    Math.abs(paceDelta) <= 5 ? "On pace ✓" :
+    paceDelta > 5 ? `Overpacing +${paceDelta}% ⚠` :
+    `Underpacing ${paceDelta}%`;
+
+  function showCanaryToast(msg: string) {
+    setCanaryToast(msg);
+    setTimeout(() => setCanaryToast(null), 2000);
+  }
 
   return (
     <div style={{ padding: "18px 20px", maxWidth: 1440 }}>
@@ -165,26 +237,41 @@ export default function Campaigns() {
 
       {/* Summary KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
-        {[
-          { label: "Total Spend (MTD)", value: `₪${totalSpend.toLocaleString()}`, sub: `of ₪${totalBudget.toLocaleString()} budget`, ltr: true },
-          { label: "Total Leads (MTD)", value: totalLeads, sub: `avg CPL ₪${avgCpl}`, ltr: false },
-          { label: "Budget Used", value: `${Math.round((totalSpend / totalBudget) * 100)}%`, sub: "of monthly allocation", ltr: true },
-          { label: "AI Change Queue", value: pendingChanges.length, sub: "pending your approval", urgent: pendingChanges.length > 0, ltr: false },
-        ].map((s) => (
-          <div
-            key={s.label}
-            style={{
-              background: "#fff", borderRadius: 8, border: `1px solid ${(s as { urgent?: boolean }).urgent ? "#fca5a5" : "#e5e7eb"}`,
-              padding: "11px 14px",
-            }}
-          >
-            <div className="num-display" dir={s.ltr ? "ltr" : "auto"} style={{ fontSize: 22, fontWeight: 700, color: (s as { urgent?: boolean }).urgent ? "#dc2626" : "#111827" }}>
-              {s.value}
-            </div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginTop: 3 }}>{s.label}</div>
-            <div dir={s.ltr ? "ltr" : "auto"} style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>{s.sub}</div>
+        {/* Total Spend */}
+        <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "11px 14px" }}>
+          <div className="num-display" dir="ltr" style={{ fontSize: 22, fontWeight: 700, color: "#111827" }}>
+            ₪{totalSpend.toLocaleString()}
           </div>
-        ))}
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginTop: 3 }}>Total Spend (MTD)</div>
+          <div dir="ltr" style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>of ₪{totalBudget.toLocaleString()} budget</div>
+        </div>
+
+        {/* Total Leads */}
+        <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "11px 14px" }}>
+          <div className="num-display" style={{ fontSize: 22, fontWeight: 700, color: "#111827" }}>
+            {totalLeads}
+          </div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginTop: 3 }}>Total Leads (MTD)</div>
+          <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>avg CPL ₪{avgCpl}</div>
+        </div>
+
+        {/* Budget Pace */}
+        <div style={{ background: "#fff", borderRadius: 8, border: `1px solid ${paceBorderColor}`, padding: "11px 14px" }}>
+          <div className="num-display" dir="ltr" style={{ fontSize: 22, fontWeight: 700, color: "#111827" }}>
+            {spendPct}%
+          </div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginTop: 3 }}>Budget Pace</div>
+          <div style={{ fontSize: 10, color: paceSubColor, marginTop: 2, fontWeight: 600 }}>{paceSubText}</div>
+        </div>
+
+        {/* AI Change Queue */}
+        <div style={{ background: "#fff", borderRadius: 8, border: `1px solid ${pendingChanges.length > 0 ? "#fca5a5" : "#e5e7eb"}`, padding: "11px 14px" }}>
+          <div className="num-display" style={{ fontSize: 22, fontWeight: 700, color: pendingChanges.length > 0 ? "#dc2626" : "#111827" }}>
+            {pendingChanges.length}
+          </div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginTop: 3 }}>AI Change Queue</div>
+          <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>pending your approval</div>
+        </div>
       </div>
 
       {/* AI Change Approval Queue */}
@@ -239,12 +326,48 @@ export default function Campaigns() {
         </div>
       )}
 
+      {/* Canary Rollout Banner */}
+      {canaryDeployment.active && (
+        <div style={{
+          background: "#faf5ff", border: "1px solid #e9d5ff", borderRadius: 8,
+          padding: "10px 14px", marginBottom: 12,
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        }}>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#7c3aed" }}>
+              ⚗ CANARY ACTIVE — {canaryDeployment.version} deployed to {canaryDeployment.clients.length} clients · {canaryDeployment.hoursRemaining}h elapsed
+            </span>
+            <span style={{ fontSize: 11, color: "#6b7280", marginLeft: 12 }}>
+              Approval rate{" "}
+              <span style={{ fontWeight: 700, color: canaryDeployment.approvalRate >= canaryDeployment.baselineApprovalRate ? "#16a34a" : "#dc2626" }}>
+                {canaryDeployment.approvalRate}%
+              </span>
+              {" "}vs baseline {canaryDeployment.baselineApprovalRate}%
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+            <button
+              onClick={() => showCanaryToast("Promoting canary to full rollout...")}
+              style={{ fontSize: 11, padding: "4px 10px", borderRadius: 5, border: "none", background: "#7c3aed", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+            >
+              Promote Now
+            </button>
+            <button
+              onClick={() => showCanaryToast("Rolling back canary deployment...")}
+              style={{ fontSize: 11, padding: "4px 10px", borderRadius: 5, border: "1px solid #dc2626", background: "#fff", color: "#dc2626", cursor: "pointer", fontWeight: 600 }}
+            >
+              Rollback
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Campaign table */}
       <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
         <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #f3f4f6", background: "#fafafa" }}>
-              {["Campaign", "Client", "Platform", "Risk Tier", "Spend / Budget", "CPL (7d trend)", "Status", "AI Action", "Actions"].map((h) => (
+              {["Campaign", "Client", "Platform", "Risk Tier", "Spend / Budget", "ETA", "CPL (7d trend)", "Status", "AI Action", "Actions"].map((h) => (
                 <th key={h} style={{
                   textAlign: "left", padding: "8px 12px", fontSize: 10, fontWeight: 700,
                   color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap",
@@ -259,6 +382,15 @@ export default function Campaigns() {
               const usage = Math.round((camp.spend / camp.budget) * 100);
               const rc = RISK_COLORS[camp.riskTier];
               const cplOk = camp.cpl <= camp.cplTarget;
+              const isExpanded = expandedAction === camp.id;
+
+              // ETA calculation
+              const dailySpend = camp.spend / 14;
+              const remainingBudget = camp.budget - camp.spend;
+              const daysLeft = dailySpend > 0 ? remainingBudget / dailySpend : 999;
+
+              const etaColor = daysLeft <= 2 ? "#dc2626" : daysLeft <= 5 ? "#d97706" : camp.learningPhase ? "#9ca3af" : "#16a34a";
+              const etaText = camp.learningPhase ? "—" : daysLeft <= 2 ? `${Math.round(daysLeft)}d ⚠` : daysLeft <= 5 ? `${Math.round(daysLeft)}d` : `~${Math.round(daysLeft)}d`;
 
               return (
                 <tr
@@ -269,11 +401,6 @@ export default function Campaigns() {
                   {/* Campaign name */}
                   <td style={{ padding: "10px 12px" }}>
                     <div style={{ fontWeight: 600, color: "#111827" }}>{camp.name}</div>
-                    {camp.learningPhase && (
-                      <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: "#f0f9ff", color: "#0284c7", fontWeight: 700, display: "inline-block", marginTop: 2 }}>
-                        🎓 LEARNING
-                      </span>
-                    )}
                   </td>
 
                   {/* Client */}
@@ -322,6 +449,13 @@ export default function Campaigns() {
                     <div dir="ltr" style={{ fontSize: 9, color: "#d1d5db" }}>of ₪{camp.budget.toLocaleString()}</div>
                   </td>
 
+                  {/* ETA column */}
+                  <td style={{ padding: "10px 12px" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: etaColor }}>
+                      {etaText}
+                    </span>
+                  </td>
+
                   {/* CPL + sparkline */}
                   <td style={{ padding: "10px 12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -337,25 +471,70 @@ export default function Campaigns() {
                     </div>
                   </td>
 
-                  {/* Status */}
+                  {/* Status — 5-state chip */}
                   <td style={{ padding: "10px 12px" }}>
-                    <span style={{
-                      fontSize: 10, padding: "2px 6px", borderRadius: 99, fontWeight: 600,
-                      background: camp.status === "active" ? "#f0fdf4" : "#f3f4f6",
-                      color: camp.status === "active" ? "#16a34a" : "#6b7280",
-                    }}>
-                      {camp.status}
-                    </span>
+                    <CampaignStatusChip
+                      status={camp.status}
+                      learningPhase={camp.learningPhase}
+                      pendingChange={!!camp.pendingAiChange}
+                      budgetPct={usage}
+                    />
                   </td>
 
-                  {/* AI last action */}
-                  <td style={{ padding: "10px 12px" }}>
+                  {/* AI last action — expandable chip */}
+                  <td style={{ padding: "10px 12px", position: "relative", minWidth: 160 }}>
                     {camp.learningPhase ? (
                       <span style={{ fontSize: 10, color: "#9ca3af" }}>Blocked — learning</span>
                     ) : camp.aiLastAction ? (
                       <div>
-                        <div style={{ fontSize: 11, color: "#6b7280" }}>{camp.aiLastAction}</div>
-                        <div style={{ fontSize: 9, color: "#d1d5db" }}>{camp.aiLastActionDays}d ago</div>
+                        <button
+                          onClick={() => setExpandedAction(isExpanded ? null : camp.id)}
+                          style={{
+                            fontSize: 11, color: "#4F46E5", background: "#eef2ff",
+                            border: "1px solid #c7d2fe", borderRadius: 5,
+                            padding: "2px 8px", cursor: "pointer", fontWeight: 600,
+                            textAlign: "left", display: "block",
+                          }}
+                        >
+                          {camp.aiLastAction} ▾
+                        </button>
+                        <div style={{ fontSize: 9, color: "#d1d5db", marginTop: 2 }}>{camp.aiLastActionDays}d ago</div>
+
+                        {isExpanded && (
+                          <div style={{
+                            position: "absolute", left: 0, top: "100%", zIndex: 20,
+                            background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 6,
+                            padding: "8px 10px", width: 240, boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                          }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: "#374151" }}>Action Log</span>
+                              <button
+                                onClick={() => setExpandedAction(null)}
+                                style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 13, lineHeight: 1 }}
+                              >
+                                ×
+                              </button>
+                            </div>
+                            <div style={{ fontSize: 11, color: "#374151", marginBottom: 3 }}>
+                              <strong>Action:</strong> {camp.aiLastAction}
+                            </div>
+                            <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 3 }}>
+                              <strong>Time:</strong> {camp.aiLastActionDays}d ago
+                            </div>
+                            <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 3 }}>
+                              <strong>Reasoning:</strong> Bid adjustment based on 7-day CPL trend above target by 8%.
+                            </div>
+                            <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 6 }}>
+                              <strong>Pre:</strong> CPL ₪{camp.cplTarget + 5} → <strong>Post:</strong> CPL ₪{camp.cpl}
+                            </div>
+                            <button
+                              onClick={() => setExpandedAction(null)}
+                              style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, border: "1px solid #e5e7eb", background: "#fff", color: "#6b7280", cursor: "pointer" }}
+                            >
+                              Rollback
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <span style={{ fontSize: 10, color: "#d1d5db" }}>—</span>
@@ -383,6 +562,18 @@ export default function Campaigns() {
 
       {/* Action modal */}
       {actionModal && <ActionModal campaignName={actionModal} onClose={() => setActionModal(null)} />}
+
+      {/* Canary toast */}
+      {canaryToast && (
+        <div style={{
+          position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+          background: "#111827", color: "#fff", fontSize: 13, fontWeight: 600,
+          padding: "10px 18px", borderRadius: 8, zIndex: 100,
+          boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+        }}>
+          {canaryToast}
+        </div>
+      )}
     </div>
   );
 }
