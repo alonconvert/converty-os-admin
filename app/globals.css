@@ -108,6 +108,15 @@ body {
 }
 .pill-pulse { animation: pillPulse 1.5s ease-in-out infinite; }
 
+/* ── Stale queue KPI card pulse (>4h oldest item) ── */
+@keyframes staleQueuePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251,146,60,0); border-color: #fca5a5; }
+  50% { box-shadow: 0 0 0 4px rgba(251,146,60,0.2); border-color: #fb923c; }
+}
+.stale-queue-pulse {
+  animation: staleQueuePulse 2.2s ease-in-out infinite;
+}
+
 /* ── Slide-in drawer ── */
 .drawer-enter {
   transform: translateX(100%);

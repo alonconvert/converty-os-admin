@@ -619,6 +619,8 @@ export const systemStats = {
   supervisedClients: 2,
   supervisedCap: 12,
   orangeRedClients: 3,
+  pendingCampaignChanges: 1,
+  criticalServices: 1,
 };
 
 // ─── Operator & system mode ─────────────────────────────────────────────────

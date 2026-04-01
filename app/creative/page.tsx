@@ -291,6 +291,16 @@ export default function Creative() {
                   )}
                   <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 10, color: "#9ca3af" }}>{test.daysRunning}d running</span>
+                    {daysToSignificance !== null && test.status === "running" && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
+                        background: daysToSignificance <= 3 ? "#fffbeb" : "#f9fafb",
+                        color: daysToSignificance <= 3 ? "#d97706" : "#6b7280",
+                        border: `1px solid ${daysToSignificance <= 3 ? "#fde68a" : "#e5e7eb"}`,
+                      }}>
+                        ~{daysToSignificance}d to decision
+                      </span>
+                    )}
                     <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: test.status === "running" ? "#f0fdf4" : test.status === "concluded" ? "#eef2ff" : "#f3f4f6", color: statusColor }}>
                       {test.status === "running" ? "● RUNNING" : test.status === "concluded" ? "✓ CONCLUDED" : "⏸ PAUSED"}
                     </span>

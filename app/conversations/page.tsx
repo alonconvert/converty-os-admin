@@ -131,12 +131,29 @@ function ConvCard({ conv, hideClientName, flashing, onApprove, onReject }: ConvC
       style={{
         background: flashing ? "#f0fdf4" : "#fff",
         borderRadius: 10,
-        border: "1px solid #e5e7eb",
-        borderLeft: isT4 ? "3px solid #dc2626" : isHuman ? "3px solid #fca5a5" : "3px solid transparent",
+        border: isT4 ? "2px solid #dc2626" : "1px solid #e5e7eb",
+        borderLeft: isT4 ? "2px solid #dc2626" : isHuman ? "3px solid #fca5a5" : "3px solid transparent",
         overflow: "hidden",
         transition: "background 0.3s",
       }}
     >
+      {/* T4 Crisis full-width banner */}
+      {isT4 && (
+        <div
+          style={{
+            background: "#7f1d1d",
+            padding: "6px 14px",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#f87171", display: "inline-block", flexShrink: 0 }} />
+          <span style={{ fontSize: 11, fontWeight: 800, color: "#fecaca", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+            T4 CRISIS — REQUIRES HUMAN TAKEOVER
+          </span>
+        </div>
+      )}
       <div style={{ padding: "12px 14px" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
           {/* Left content */}

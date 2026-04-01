@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { systemStats, agencyHealthScore, operatorConfig, canaryDeployment } from "@/lib/mock-data";
 
 function ISTTime() {
@@ -28,8 +29,8 @@ interface PillProps {
   href?: string;
 }
 
-function Pill({ label, value, color, urgent }: PillProps) {
-  return (
+function Pill({ label, value, color, urgent, href }: PillProps) {
+  const inner = (
     <div
       style={{
         display: "flex",
@@ -39,6 +40,8 @@ function Pill({ label, value, color, urgent }: PillProps) {
         borderRadius: 99,
         background: urgent ? "rgba(220,38,38,0.15)" : "rgba(255,255,255,0.06)",
         border: `1px solid ${urgent ? "rgba(220,38,38,0.3)" : "rgba(255,255,255,0.1)"}`,
+        cursor: href ? "pointer" : "default",
+        transition: href ? "background 0.15s" : undefined,
       }}
       className={urgent ? "pill-pulse" : ""}
     >
@@ -55,6 +58,14 @@ function Pill({ label, value, color, urgent }: PillProps) {
       </span>
     </div>
   );
+  if (href) {
+    return (
+      <Link href={href} style={{ textDecoration: "none" }}>
+        {inner}
+      </Link>
+    );
+  }
+  return inner;
 }
 
 export default function StatusBar() {
@@ -103,9 +114,9 @@ export default function StatusBar() {
         </span>
       </div>
 
-      <Pill label="Clients" value={`${systemStats.activeClients}/${systemStats.clientCapacity}`} color="#a5b4fc" />
-      <Pill label="Queue" value={systemStats.pendingApprovals} color="#fbbf24" urgent={systemStats.pendingApprovals > 0} />
-      <Pill label="T4" value={systemStats.t4Active} color="#f87171" urgent={systemStats.t4Active > 0} />
+      <Pill label="Clients" value={`${systemStats.activeClients}/${systemStats.clientCapacity}`} color="#a5b4fc" href="/clients" />
+      <Pill label="Queue" value={systemStats.pendingApprovals} color="#fbbf24" urgent={systemStats.pendingApprovals > 0} href="/conversations" />
+      <Pill label="T4" value={systemStats.t4Active} color="#f87171" urgent={systemStats.t4Active > 0} href="/conversations" />
       <Pill label="Leads" value={systemStats.leadsToday} color="#6ee7b7" />
       <Pill label="CPL" value={`₪${systemStats.monthlyCpl}`} color={systemStats.monthlyCpl <= systemStats.monthlyCplTarget ? "#6ee7b7" : "#fbbf24"} />
       <Pill label="AI Spend" value={`₪${systemStats.aiSpendToday.toFixed(2)}`} color="#c4b5fd" />

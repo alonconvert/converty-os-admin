@@ -10,10 +10,10 @@ const navItems = [
   { href: "/clients", label: "Clients", icon: "⬡" },
   { href: "/conversations", label: "Conversations", icon: "◎", badgeKey: "pendingApprovals" as const },
   { href: "/pulse", label: "Pulse", icon: "◉" },
-  { href: "/campaigns", label: "Campaigns", icon: "▲" },
+  { href: "/campaigns", label: "Campaigns", icon: "▲", badgeKey: "pendingCampaignChanges" as const },
   { href: "/creative", label: "Creative", icon: "✦" },
   { href: "/reports", label: "Reports", icon: "▦" },
-  { href: "/system", label: "System", icon: "⚙" },
+  { href: "/system", label: "System", icon: "⚙", badgeKey: "criticalServices" as const, badgeColor: "#ef4444" },
 ];
 
 function ISTClock() {
@@ -230,7 +230,7 @@ export default function Sidebar() {
               {!collapsed && badge && badge > 0 && (
                 <span
                   style={{
-                    background: "#4F46E5",
+                    background: (item as { badgeColor?: string }).badgeColor ?? "#4F46E5",
                     color: "#fff",
                     fontSize: 10,
                     fontWeight: 700,

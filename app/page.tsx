@@ -437,13 +437,14 @@ export default function Dashboard() {
             <div
               key={kpi.label}
               onClick={kpi.clickable ? () => setAtRiskOpen((v) => !v) : undefined}
+              className={kpi.extraBoxShadow ? "stale-queue-pulse" : ""}
               style={{
                 background: "#fff",
                 borderRadius: 10,
                 padding: "12px 14px",
                 border: `1px solid ${kpi.urgent ? "#fca5a5" : "#e5e7eb"}`,
                 boxShadow: kpi.extraBoxShadow
-                  ? kpi.extraBoxShadow
+                  ? undefined
                   : kpi.urgent
                   ? "0 0 0 3px rgba(220,38,38,0.07)"
                   : "none",

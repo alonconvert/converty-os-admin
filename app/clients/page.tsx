@@ -446,17 +446,18 @@ export default function Clients() {
         />
       </div>
 
-      {/* Summary row */}
+      {/* Summary row — click to filter */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
         {[
-          { label: "Autonomous", count: mockClients.filter((c) => c.level === "Autonomous").length, color: "#16a34a", bg: "#f0fdf4" },
-          { label: "Semi-Autonomous", count: mockClients.filter((c) => c.level === "SemiAuto").length, color: "#d97706", bg: "#fefce8" },
+          { label: "Autonomous", count: mockClients.filter((c) => c.level === "Autonomous").length, color: "#16a34a", bg: "#f0fdf4", filterKey: "autonomous" },
+          { label: "Semi-Autonomous", count: mockClients.filter((c) => c.level === "SemiAuto").length, color: "#d97706", bg: "#fefce8", filterKey: "semiauto" },
           {
             label: `Supervised (${supervisedCount}/${systemStats.supervisedCap} cap)`,
             count: supervisedCount,
             color: supervisedCount >= 10 ? "#dc2626" : "#dc2626",
             bg: "#fef2f2",
             urgent: supervisedCount >= 10,
+            filterKey: "supervised",
           },
           {
             label: "At-Risk (health)",
@@ -464,18 +465,24 @@ export default function Clients() {
             color: "#ea580c",
             bg: "#fff7ed",
             urgent: mockClients.some((c) => c.churnTier === "red"),
+            filterKey: "at_risk",
           },
         ].map((s) => (
           <div
             key={s.label}
+            onClick={() => setClientFilter(clientFilter === s.filterKey ? "all" : s.filterKey)}
             style={{
-              background: "#fff",
+              background: clientFilter === s.filterKey ? s.bg : "#fff",
               borderRadius: 8,
-              border: `1px solid ${(s as { urgent?: boolean }).urgent ? "#fca5a5" : "#e5e7eb"}`,
+              border: clientFilter === s.filterKey
+                ? `2px solid ${s.color}`
+                : `1px solid ${(s as { urgent?: boolean }).urgent ? "#fca5a5" : "#e5e7eb"}`,
               padding: "10px 14px",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              cursor: "pointer",
+              transition: "border 0.15s, background 0.15s",
             }}
           >
             <div>

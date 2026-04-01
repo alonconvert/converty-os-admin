@@ -20,6 +20,7 @@ const statusOrder: Record<string, number> = {
   unconfigured: 1,
   degraded: 2,
   healthy: 3,
+  parked: 4,
 };
 
 const rawServices = [
@@ -30,7 +31,7 @@ const rawServices = [
   { name: "Telegram Bot", status: "healthy", latency: "55ms", uptime: "100%" },
   { name: "Google Ads API", status: "healthy", latency: "340ms", uptime: "99.5%" },
   { name: "Meta Marketing API", status: "healthy", latency: "280ms", uptime: "99.3%" },
-  { name: "Voicenter", status: "unconfigured", latency: "—", uptime: "—" },
+  { name: "Voicenter", status: "parked", latency: "—", uptime: "Phase 2" },
 ];
 
 const services = [...rawServices].sort(
@@ -38,7 +39,7 @@ const services = [...rawServices].sort(
 );
 
 const criticalServices = services.filter(
-  (s) => s.status === "offline" || s.status === "unconfigured"
+  (s) => s.status === "offline" || s.status === "unconfigured" || s.status === "degraded"
 );
 
 const loopActions = [
@@ -347,6 +348,7 @@ export default function System() {
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "9px 12px", background: "#f9fafb", borderRadius: 7,
                   border: `1px solid ${svc.status === "degraded" ? "#fde68a" : svc.status === "unconfigured" ? "#fca5a5" : svc.status === "offline" ? "#f87171" : "transparent"}`,
+                  opacity: svc.status === "parked" ? 0.55 : 1,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
@@ -356,12 +358,13 @@ export default function System() {
                       svc.status === "healthy" ? "#22c55e"
                       : svc.status === "degraded" ? "#f59e0b"
                       : svc.status === "offline" ? "#dc2626"
+                      : svc.status === "parked" ? "#9ca3af"
                       : "#d1d5db",
                   }} />
                   <div>
-                    <div style={{ fontSize: 11, fontWeight: 500, color: "#374151" }}>{svc.name}</div>
+                    <div style={{ fontSize: 11, fontWeight: 500, color: svc.status === "parked" ? "#9ca3af" : "#374151" }}>{svc.name}</div>
                     <div style={{ fontSize: 9, color: "#9ca3af", marginTop: 1 }}>
-                      {serviceImpacts[svc.name]}
+                      {svc.status === "parked" ? "Parked — Phase 2" : serviceImpacts[svc.name]}
                     </div>
                   </div>
                 </div>
