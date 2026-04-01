@@ -1,48 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Serif+Display:ital@0;1&family=Heebo:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,opsz,wght@0,6..30,300;0,6..30,400;0,6..30,500;0,6..30,600;0,6..30,700;0,6..30,800;1,6..30,400&family=Heebo:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
-  /* ── Converty brand palette ── */
-  --brand: #9B51E0;
-  --brand-dark: #6B21A8;
-  --brand-deeper: #3D1080;
-  --brand-light: #C4A0EF;
-  --brand-bg: #F5F0FD;
-  --brand-bg-soft: #FAF7FF;
-
-  /* Gradient — Converty signature */
-  --gradient: linear-gradient(135deg, #0693E3 0%, #9B51E0 100%);
-  --gradient-soft: linear-gradient(135deg, rgba(6,147,227,0.08) 0%, rgba(155,81,224,0.08) 100%);
-
-  /* Page */
-  --page-bg: #F7F5FE;
+  --page-bg: #F9FAFB;
   --card-bg: #FFFFFF;
-  --card-border: #EDE4F8;
-  --card-shadow: 0 1px 3px rgba(107,33,168,0.08), 0 4px 12px rgba(107,33,168,0.06);
-  --card-shadow-hover: 0 2px 8px rgba(107,33,168,0.12), 0 8px 24px rgba(107,33,168,0.1);
+  --card-border: #E5E7EB;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
 
-  /* Nav */
-  --nav-bg: #2D0B6B;
-  --nav-text: rgba(255,255,255,0.6);
-  --nav-active: #FFFFFF;
-  --metrics-bg: #FFFFFF;
+  --sidebar-bg: #FFFFFF;
+  --sidebar-border: #E5E7EB;
+  --sidebar-active-bg: #F5F0FD;
+  --sidebar-active-color: #7C3AED;
+  --sidebar-active-border: #7C3AED;
 
-  /* Text */
-  --text-primary: #1A0A3D;
-  --text-secondary: #4B5563;
-  --text-muted: #9B8CB5;
+  --brand: #7C3AED;
+  --brand-light: #F5F0FD;
+  --brand-gradient: linear-gradient(135deg, #0693E3 0%, #9B51E0 100%);
 
-  /* Semantic */
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6B7280;
+  --text-placeholder: #9CA3AF;
+
   --success: #10B981;
   --success-bg: #ECFDF5;
   --warning: #F59E0B;
   --warning-bg: #FFFBEB;
   --danger: #EF4444;
   --danger-bg: #FEF2F2;
-  --info: #0693E3;
+  --info: #3B82F6;
   --info-bg: #EFF6FF;
 
-  /* Trust score palette */
   --trust-green: #10B981;
   --trust-green-bg: #ECFDF5;
   --trust-amber: #F59E0B;
@@ -50,7 +38,6 @@
   --trust-red: #EF4444;
   --trust-red-bg: #FEF2F2;
 
-  /* Health / churn palette */
   --health-green: #059669;
   --health-green-bg: #ecfdf5;
   --health-yellow: #ca8a04;
@@ -60,18 +47,12 @@
   --health-crimson: #be123c;
   --health-crimson-bg: #fff1f2;
 
-  /* Campaign risk */
   --risk-auto: #10B981;
   --risk-auto-bg: #ECFDF5;
   --risk-24h: #F59E0B;
   --risk-24h-bg: #FFFBEB;
   --risk-immed: #EF4444;
   --risk-immed-bg: #FEF2F2;
-
-  /* Radius */
-  --radius: 12px;
-  --radius-sm: 8px;
-  --radius-lg: 16px;
 }
 
 * { box-sizing: border-box; }
@@ -79,12 +60,13 @@
 body {
   background: var(--page-bg);
   color: var(--text-primary);
-  font-family: 'Plus Jakarta Sans', 'Heebo', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
+  margin: 0;
 }
 
-/* Hebrew text always uses Heebo */
-[dir="rtl"], .text-hebrew, .msg-rtl {
+/* Hebrew text */
+.text-hebrew, .msg-rtl {
   direction: rtl;
   text-align: right;
   font-family: 'Heebo', sans-serif;
@@ -113,18 +95,16 @@ body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #D8CFF0; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
 
 /* ── T4 crisis pulse ── */
 @keyframes t4BorderPulse {
   0%, 100% { border-left-color: var(--danger); box-shadow: 0 0 0 0 rgba(239,68,68,0); }
   50% { border-left-color: #fca5a5; box-shadow: 0 0 0 4px rgba(239,68,68,0.08); }
 }
-.t4-pulse {
-  animation: t4BorderPulse 1.8s ease-in-out infinite;
-}
+.t4-pulse { animation: t4BorderPulse 1.8s ease-in-out infinite; }
 
-/* ── Orange health dot blink ── */
+/* ── Blink ── */
 @keyframes orangeBlink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
@@ -140,44 +120,33 @@ body {
 /* ── Pill pulse ── */
 @keyframes pillPulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  50% { opacity: 0.55; }
 }
 .pill-pulse { animation: pillPulse 1.5s ease-in-out infinite; }
 
-/* ── Stale queue KPI card pulse ── */
+/* ── Stale queue pulse ── */
 @keyframes staleQueuePulse {
   0%, 100% { box-shadow: var(--card-shadow); border-color: #fca5a5; }
-  50% { box-shadow: 0 0 0 4px rgba(239,68,68,0.12); border-color: #ef4444; }
+  50% { box-shadow: 0 0 0 3px rgba(239,68,68,0.1); border-color: #ef4444; }
 }
-.stale-queue-pulse {
-  animation: staleQueuePulse 2.2s ease-in-out infinite;
-}
+.stale-queue-pulse { animation: staleQueuePulse 2.2s ease-in-out infinite; }
 
-/* ── Slide-in drawer ── */
-.drawer-enter {
-  transform: translateX(100%);
-  opacity: 0;
-}
+/* ── Drawer ── */
+.drawer-enter { transform: translateX(100%); opacity: 0; }
 .drawer-open {
-  transform: translateX(0);
-  opacity: 1;
+  transform: translateX(0); opacity: 1;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
 }
 
-/* ── Sparkline SVG ── */
-.sparkline-path {
-  fill: none;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
+/* ── Sparkline ── */
+.sparkline-path { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ── Table hover ── */
-tr.hoverable:hover { background: var(--brand-bg-soft); cursor: pointer; }
+tr.hoverable:hover { background: #F9FAFB; cursor: pointer; }
 
 /* ── Focus ring ── */
 button:focus-visible, a:focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
 }

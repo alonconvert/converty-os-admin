@@ -3,18 +3,35 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { systemStats, operatorConfig, canaryDeployment } from "@/lib/mock-data";
+import { systemStats, operatorConfig } from "@/lib/mock-data";
 
-const navItems = [
-  { href: "/", label: "Dashboard", icon: "◈" },
-  { href: "/clients", label: "Clients", icon: "⬡" },
-  { href: "/conversations", label: "Conversations", icon: "◎", badgeKey: "pendingApprovals" as const },
-  { href: "/pulse", label: "Pulse", icon: "◉" },
-  { href: "/campaigns", label: "Campaigns", icon: "▲", badgeKey: "pendingCampaignChanges" as const },
-  { href: "/creative", label: "Creative", icon: "✦" },
-  { href: "/reports", label: "Reports", icon: "▦" },
-  { href: "/system", label: "System", icon: "⚙", badgeKey: "criticalServices" as const, badgeColor: "#ef4444" },
+const navSections = [
+  {
+    label: "פעולות",
+    items: [
+      { href: "/", label: "לוח בקרה", icon: "◈" },
+      { href: "/clients", label: "לקוחות", icon: "⬡" },
+      { href: "/conversations", label: "שיחות", icon: "◎", badgeKey: "pendingApprovals" as const },
+      { href: "/pulse", label: "Pulse", icon: "◉" },
+    ],
+  },
+  {
+    label: "שיווק",
+    items: [
+      { href: "/campaigns", label: "קמפיינים", icon: "▲", badgeKey: "pendingCampaignChanges" as const },
+      { href: "/creative", label: "קריאייטיב", icon: "✦" },
+      { href: "/reports", label: "דוחות", icon: "▦" },
+    ],
+  },
+  {
+    label: "מערכת",
+    items: [
+      { href: "/system", label: "מערכת", icon: "⚙", badgeKey: "criticalServices" as const, danger: true },
+    ],
+  },
 ];
+
+type BadgeKey = "pendingApprovals" | "pendingCampaignChanges" | "criticalServices";
 
 function ISTClock() {
   const [time, setTime] = useState<string>("—");
@@ -33,325 +50,233 @@ function ISTClock() {
     const t = setInterval(update, 30000);
     return () => clearInterval(t);
   }, []);
-  return <span dir="ltr">{time} IST</span>;
+  return <span dir="ltr" style={{ fontVariantNumeric: "tabular-nums" }}>{time}</span>;
 }
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-  const [operatorMode, setOperatorMode] = useState<"normal" | "unavailable">(
-    operatorConfig.mode === "vacation" ? "unavailable" : operatorConfig.mode
+  const [operatorMode, setOperatorMode] = useState<"normal" | "semiAuto" | "unavailable">(
+    operatorConfig.mode === "vacation" ? "unavailable" : (operatorConfig.mode === "normal" ? "normal" : "semiAuto")
   );
 
   const hasT4 = systemStats.t4Active > 0;
 
+  const badgeValues: Record<BadgeKey, number> = {
+    pendingApprovals: systemStats.pendingApprovals,
+    pendingCampaignChanges: (systemStats as { pendingCampaignChanges?: number }).pendingCampaignChanges ?? 0,
+    criticalServices: (systemStats as { criticalServices?: number }).criticalServices ?? 0,
+  };
+
+  const modeCycle = ["normal", "semiAuto", "unavailable"] as const;
+  const modeLabel: Record<string, string> = { normal: "רגיל", semiAuto: "חצי-אוטו", unavailable: "לא זמין" };
+  const modeColor: Record<string, string> = { normal: "#10B981", semiAuto: "#F59E0B", unavailable: "#EF4444" };
+
   return (
     <aside
       style={{
-        width: collapsed ? 56 : 224,
-        minWidth: collapsed ? 56 : 224,
-        background: "#0f1117",
-        transition: "width 0.2s cubic-bezier(0.16,1,0.3,1)",
-        overflow: "hidden",
+        width: 240,
+        minWidth: 240,
+        background: "var(--sidebar-bg)",
+        borderInlineEnd: "1px solid var(--sidebar-border)",
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        position: "sticky",
+        top: 0,
+        flexShrink: 0,
       }}
-      className="flex flex-col h-full relative"
     >
+      {/* T4 crisis strip */}
+      {hasT4 && (
+        <Link
+          href="/conversations"
+          style={{
+            background: "#FEF2F2",
+            borderBottom: "1px solid #FECACA",
+            padding: "8px 16px",
+            display: "flex",
+            gap: 8,
+            alignItems: "center",
+            textDecoration: "none",
+          }}
+        >
+          <span
+            style={{ width: 7, height: 7, borderRadius: "50%", background: "#EF4444", flexShrink: 0 }}
+            className="pill-pulse"
+          />
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#B91C1C" }}>T4 CRISIS — לחץ לפרטים</span>
+        </Link>
+      )}
+
       {/* Logo */}
       <div
-        className="flex items-center border-b"
         style={{
-          borderColor: "rgba(255,255,255,0.08)",
-          padding: collapsed ? "14px 14px" : "14px 16px",
+          padding: "16px 20px",
+          borderBottom: "1px solid #F3F4F6",
+          display: "flex",
+          alignItems: "center",
           gap: 10,
-          minHeight: 56,
         }}
       >
         <div
           style={{
-            background: "#4F46E5",
-            minWidth: 28,
-            width: 28,
-            height: 28,
-            borderRadius: 7,
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            background: "var(--brand-gradient)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 13,
+            fontSize: 16,
             fontWeight: 800,
             color: "#fff",
             flexShrink: 0,
-            letterSpacing: "-0.5px",
           }}
         >
-          C
+          Y
         </div>
-        {!collapsed && (
-          <div style={{ overflow: "hidden" }}>
-            <div className="text-white font-semibold text-sm leading-tight whitespace-nowrap">
-              Converty OS
-            </div>
-            <div style={{ color: "#4b5563", fontSize: 11 }} className="whitespace-nowrap">
-              Agency Panel
-            </div>
-          </div>
-        )}
-        {!collapsed && (
-          <button
-            onClick={() => setCollapsed(true)}
-            style={{
-              marginLeft: "auto",
-              background: "none",
-              border: "none",
-              color: "#4b5563",
-              cursor: "pointer",
-              padding: "4px",
-              borderRadius: 4,
-              display: "flex",
-              flexShrink: 0,
-            }}
-            title="Collapse sidebar"
-          >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        )}
-        {collapsed && (
-          <button
-            onClick={() => setCollapsed(false)}
-            style={{
-              position: "absolute",
-              right: 8,
-              top: 16,
-              background: "none",
-              border: "none",
-              color: "#4b5563",
-              cursor: "pointer",
-              padding: "4px",
-              display: "flex",
-            }}
-            title="Expand sidebar"
-          >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        )}
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.2 }}>Converty</div>
+          <div style={{ fontSize: 11, color: "var(--text-placeholder)", fontFamily: "'Heebo', sans-serif" }}>מנהל מערכת</div>
+        </div>
       </div>
 
-      {/* T4 Crisis Banner */}
-      {hasT4 && (
-        <div
-          className="pill-pulse"
+      {/* Nav */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
+        {navSections.map((section) => (
+          <div key={section.label} style={{ marginBottom: 22 }}>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: "var(--text-placeholder)",
+                letterSpacing: "0.06em",
+                padding: "0 8px",
+                marginBottom: 4,
+                fontFamily: "'Heebo', sans-serif",
+              }}
+            >
+              {section.label}
+            </div>
+            {section.items.map((item) => {
+              const isActive = pathname === item.href;
+              const badgeCount = item.badgeKey ? badgeValues[item.badgeKey] : 0;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "7px 10px",
+                    borderRadius: 7,
+                    textDecoration: "none",
+                    background: isActive ? "var(--sidebar-active-bg)" : "transparent",
+                    color: isActive ? "var(--sidebar-active-color)" : "var(--text-secondary)",
+                    fontWeight: isActive ? 600 : 500,
+                    fontSize: 13,
+                    marginBottom: 2,
+                    transition: "background 0.1s, color 0.1s",
+                    borderInlineStart: isActive ? "2px solid var(--sidebar-active-border)" : "2px solid transparent",
+                    fontFamily: "'Heebo', sans-serif",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      (e.currentTarget as HTMLAnchorElement).style.background = "#F9FAFB";
+                      (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-primary)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+                      (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-secondary)";
+                    }
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 14,
+                      width: 18,
+                      textAlign: "center",
+                      flexShrink: 0,
+                      opacity: isActive ? 1 : 0.5,
+                    }}
+                  >
+                    {item.icon}
+                  </span>
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  {badgeCount > 0 && (
+                    <span
+                      style={{
+                        background: (item as { danger?: boolean }).danger ? "#EF4444" : "var(--brand)",
+                        color: "#fff",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        padding: "1px 6px",
+                        borderRadius: 20,
+                        minWidth: 18,
+                        textAlign: "center",
+                        lineHeight: "16px",
+                        display: "inline-block",
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      }}
+                    >
+                      {badgeCount}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* Footer: operator mode + clock */}
+      <div
+        style={{
+          padding: "12px 16px",
+          borderTop: "1px solid #F3F4F6",
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}
+      >
+        <button
+          onClick={() => {
+            const idx = modeCycle.indexOf(operatorMode as typeof modeCycle[number]);
+            setOperatorMode(modeCycle[(idx + 1) % modeCycle.length]);
+          }}
           style={{
-            background: "#7f1d1d",
-            borderBottom: "1px solid #991b1b",
-            padding: collapsed ? "6px 0" : "6px 12px",
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
             display: "flex",
             alignItems: "center",
-            justifyContent: collapsed ? "center" : "flex-start",
-            gap: 6,
+            gap: 7,
+            width: "100%",
           }}
         >
           <span
             style={{
-              width: 6,
-              height: 6,
+              width: 8,
+              height: 8,
               borderRadius: "50%",
-              background: "#f87171",
-              flexShrink: 0,
+              background: modeColor[operatorMode],
               display: "inline-block",
+              flexShrink: 0,
             }}
           />
-          {!collapsed && (
-            <span style={{ color: "#fca5a5", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
-              T4 CRISIS — {systemStats.t4Active} active
-            </span>
-          )}
+          <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 500, fontFamily: "'Heebo', sans-serif" }}>
+            {modeLabel[operatorMode]}
+          </span>
+        </button>
+        <div style={{ fontSize: 11, color: "var(--text-placeholder)", display: "flex", alignItems: "center", gap: 4 }}>
+          <ISTClock />
+          <span>IST</span>
         </div>
-      )}
-
-      {/* Nav */}
-      <nav className="flex-1 py-3" style={{ padding: collapsed ? "12px 8px" : "12px 8px" }}>
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          const badge = item.badgeKey ? systemStats[item.badgeKey] : null;
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={collapsed ? item.label : undefined}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: collapsed ? "center" : "space-between",
-                padding: collapsed ? "9px 0" : "8px 10px",
-                borderRadius: 7,
-                marginBottom: 2,
-                background: isActive ? "rgba(79,70,229,0.15)" : "transparent",
-                color: isActive ? "#a5b4fc" : "#6b7280",
-                textDecoration: "none",
-                transition: "background 0.15s, color 0.15s",
-                gap: 10,
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) (e.currentTarget as HTMLAnchorElement).style.color = "#d1d5db";
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) (e.currentTarget as HTMLAnchorElement).style.color = "#6b7280";
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: collapsed ? 0 : 10,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 14,
-                    lineHeight: 1,
-                    fontFamily: "monospace",
-                    width: 18,
-                    textAlign: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  {item.icon}
-                </span>
-                {!collapsed && (
-                  <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 500, whiteSpace: "nowrap" }}>
-                    {item.label}
-                  </span>
-                )}
-              </div>
-              {!collapsed && badge && badge > 0 && (
-                <span
-                  style={{
-                    background: (item as { badgeColor?: string }).badgeColor ?? "#4F46E5",
-                    color: "#fff",
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: "1px 6px",
-                    borderRadius: 99,
-                    minWidth: 18,
-                    textAlign: "center",
-                  }}
-                >
-                  {badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-
-        {/* Canary badge */}
-        {!collapsed && canaryDeployment.active && (
-          <div
-            style={{
-              margin: "8px 4px 0",
-              background: "rgba(124,58,237,0.12)",
-              border: "1px solid rgba(124,58,237,0.2)",
-              borderRadius: 7,
-              padding: "8px 10px",
-            }}
-          >
-            <div style={{ fontSize: 10, color: "#a78bfa", fontWeight: 700, letterSpacing: "0.04em" }}>
-              ⚗ CANARY {canaryDeployment.version}
-            </div>
-            <div style={{ fontSize: 11, color: "#7c3aed", marginTop: 2 }}>
-              {canaryDeployment.hoursRemaining}h remaining
-            </div>
-          </div>
-        )}
-      </nav>
-
-      {/* Footer */}
-      <div
-        style={{
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-          padding: collapsed ? "12px 8px" : "12px 14px",
-        }}
-      >
-        {/* Operator mode toggle */}
-        {!collapsed && (
-          <button
-            onClick={() => setOperatorMode((m) => (m === "normal" ? "unavailable" : "normal"))}
-            style={{
-              width: "100%",
-              background: operatorMode === "normal" ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.12)",
-              border: `1px solid ${operatorMode === "normal" ? "rgba(16,185,129,0.2)" : "rgba(245,158,11,0.25)"}`,
-              borderRadius: 7,
-              padding: "7px 10px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 7,
-              marginBottom: 10,
-              transition: "all 0.2s",
-            }}
-          >
-            <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: "50%",
-                background: operatorMode === "normal" ? "#10b981" : "#f59e0b",
-                flexShrink: 0,
-              }}
-            />
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: operatorMode === "normal" ? "#6ee7b7" : "#fcd34d",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {operatorMode === "normal" ? "Online" : "Unavailable"}
-            </span>
-          </button>
-        )}
-
-        {collapsed && (
-          <button
-            onClick={() => setOperatorMode((m) => (m === "normal" ? "unavailable" : "normal"))}
-            title={operatorMode === "normal" ? "Go unavailable" : "Go online"}
-            style={{
-              width: "100%",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              justifyContent: "center",
-              marginBottom: 8,
-            }}
-          >
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: operatorMode === "normal" ? "#10b981" : "#f59e0b",
-              }}
-            />
-          </button>
-        )}
-
-        {!collapsed && (
-          <>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ color: "#4b5563", fontSize: 11 }}>
-                <ISTClock />
-              </span>
-            </div>
-            <div style={{ color: "#374151", fontSize: 10, marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              v{canaryDeployment.active ? canaryDeployment.version : "2.0"} · uptime {systemStats.uptime}
-            </div>
-          </>
-        )}
       </div>
     </aside>
   );

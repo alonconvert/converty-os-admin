@@ -15,13 +15,13 @@ import {
 import ApprovalQueue from "@/components/ApprovalQueue";
 import MorningBriefing from "@/components/MorningBriefing";
 
-// ── Sparkline SVG ────────────────────────────────────────────────────────────
-function Sparkline({ data, color = "#9B51E0", height = 28 }: { data: number[]; color?: string; height?: number }) {
+// ── Sparkline ────────────────────────────────────────────────────────────────
+function Sparkline({ data, color = "#7C3AED", height = 32 }: { data: number[]; color?: string; height?: number }) {
   if (!data || data.length < 2) return null;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
-  const w = 60;
+  const w = 64;
   const h = height;
   const pts = data.map((v, i) => {
     const x = (i / (data.length - 1)) * w;
@@ -29,32 +29,31 @@ function Sparkline({ data, color = "#9B51E0", height = 28 }: { data: number[]; c
     return `${x},${y}`;
   });
   return (
-    <svg width={w} height={h} style={{ display: "block" }}>
-      <polyline points={pts.join(" ")} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width={w} height={h} style={{ display: "block", flexShrink: 0 }}>
+      <polyline points={pts.join(" ")} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity={0.7} />
     </svg>
   );
 }
 
 // ── Portfolio heat map ───────────────────────────────────────────────────────
 function PortfolioHeatMap() {
-  const activeClients = mockClients;
   const total = systemStats.totalClients;
   const allDots = Array.from({ length: total }, (_, i) => {
-    const real = activeClients[i];
-    if (real) return { score: real.trustScore, budget: real.monthlyBudget, name: real.name, id: real.id, real: true };
+    const real = mockClients[i];
+    if (real) return { score: real.trustScore, budget: real.monthlyBudget, name: real.name, real: true };
     const score = 40 + Math.floor(((i * 17) % 60));
-    return { score, budget: 3000 + ((i * 2300) % 18000), name: `Client ${i + 1}`, id: null, real: false };
+    return { score, budget: 3000 + ((i * 2300) % 18000), name: `Client ${i + 1}`, real: false };
   });
 
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center" }}>
       {allDots.map((dot, i) => {
-        const size = Math.max(9, Math.min(19, 9 + Math.round((dot.budget / 22000) * 10)));
+        const size = Math.max(9, Math.min(18, 9 + Math.round((dot.budget / 22000) * 9)));
         const color = dot.score >= 75 ? "#10B981" : dot.score >= 40 ? "#F59E0B" : "#EF4444";
         return (
           <a
             key={i}
-            href={dot.real ? `/clients` : undefined}
+            href={dot.real ? "/clients" : undefined}
             title={`${dot.name} — Trust: ${dot.score}`}
             style={{
               display: "inline-block",
@@ -87,38 +86,201 @@ function churnCount(tier: string) {
   return mockClients.filter((c) => c.churnTier === tier).length;
 }
 
-const atRiskClients = mockClients.filter(
-  (c) => c.churnTier === "orange" || c.churnTier === "red"
-);
+const atRiskClients = mockClients.filter((c) => c.churnTier === "orange" || c.churnTier === "red");
 
 const overnightItemHighlights: Record<string, string[]> = {
-  "Trust changes": overnightSummary.highlights.filter((h) => h.toLowerCase().includes("trust")),
-  "Campaign acts": overnightSummary.highlights.filter((h) =>
-    h.toLowerCase().includes("campaign") || h.toLowerCase().includes("lead batch") ||
-    h.toLowerCase().includes("meta") || h.toLowerCase().includes("google")
-  ),
-  "Leads arrived": overnightSummary.highlights.filter((h) => h.toLowerCase().includes("lead")),
-  "Auto-approved": overnightSummary.highlights.filter((h) =>
+  "הגעת לידים": overnightSummary.highlights.filter((h) => h.toLowerCase().includes("lead")),
+  "אישור אוטומטי": overnightSummary.highlights.filter((h) =>
     h.toLowerCase().includes("auto-approved") || h.toLowerCase().includes("messages")
+  ),
+  "שינויי אמון": overnightSummary.highlights.filter((h) => h.toLowerCase().includes("trust")),
+  "פעולות קמפיין": overnightSummary.highlights.filter((h) =>
+    h.toLowerCase().includes("campaign") || h.toLowerCase().includes("meta") || h.toLowerCase().includes("google")
   ),
 };
 
-// ── Shared card style ────────────────────────────────────────────────────────
+// ── Shared card styles ───────────────────────────────────────────────────────
 const CARD: React.CSSProperties = {
   background: "#fff",
-  borderRadius: 12,
   border: "1px solid var(--card-border)",
+  borderRadius: 8,
   boxShadow: "var(--card-shadow)",
   overflow: "hidden",
 };
 
 const CARD_HEADER: React.CSSProperties = {
   padding: "12px 16px",
-  borderBottom: "1px solid var(--card-border)",
+  borderBottom: "1px solid #F3F4F6",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
 };
+
+// ── KPI Card component ───────────────────────────────────────────────────────
+function KpiCard({
+  label,
+  value,
+  sub,
+  subColor,
+  color,
+  sparkData,
+  trend,
+  trendUp,
+  gauge,
+  gaugeVal,
+  gaugeCap,
+  gaugeColor,
+  urgent,
+  extraPulse,
+  onClick,
+  expandLabel,
+  ltr,
+}: {
+  label: string;
+  value: string | number;
+  sub?: string;
+  subColor?: string;
+  color?: string;
+  sparkData?: number[] | null;
+  trend?: string | null;
+  trendUp?: boolean | null;
+  gauge?: boolean;
+  gaugeVal?: number;
+  gaugeCap?: number;
+  gaugeColor?: string;
+  urgent?: boolean;
+  extraPulse?: boolean;
+  onClick?: () => void;
+  expandLabel?: string;
+  ltr?: boolean;
+}) {
+  const [hov, setHov] = useState(false);
+
+  return (
+    <div
+      onClick={onClick}
+      className={extraPulse ? "stale-queue-pulse" : ""}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        background: "#fff",
+        border: `1px solid ${urgent ? "rgba(239,68,68,0.35)" : "var(--card-border)"}`,
+        borderRadius: 8,
+        padding: "16px 18px 14px",
+        boxShadow: hov
+          ? "0 4px 12px rgba(0,0,0,0.1)"
+          : urgent
+          ? "0 0 0 3px rgba(239,68,68,0.06), var(--card-shadow)"
+          : "var(--card-shadow)",
+        cursor: onClick ? "pointer" : "default",
+        transition: "box-shadow 0.15s, transform 0.1s",
+        transform: hov ? "translateY(-1px)" : "none",
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+      }}
+    >
+      {/* Top row: label + sparkline */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            color: "var(--text-muted)",
+            fontFamily: "'Heebo', sans-serif",
+          }}
+        >
+          {label}
+        </span>
+        {sparkData && (
+          <Sparkline data={sparkData} color={color ?? "#7C3AED"} height={28} />
+        )}
+        {urgent && !sparkData && (
+          <span
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              background: "#EF4444",
+              display: "inline-block",
+              marginTop: 3,
+              flexShrink: 0,
+            }}
+            className="pill-pulse"
+          />
+        )}
+      </div>
+
+      {/* Number */}
+      <div
+        className="num-display"
+        dir={ltr ? "ltr" : "auto"}
+        style={{
+          fontSize: 28,
+          fontWeight: 800,
+          color: color ?? "var(--text-primary)",
+          lineHeight: 1,
+          marginBottom: 6,
+        }}
+      >
+        {value}
+      </div>
+
+      {/* Sub */}
+      {sub && (
+        <div
+          style={{
+            fontSize: 11,
+            color: subColor ?? "var(--text-muted)",
+            lineHeight: 1.4,
+            fontFamily: "'Heebo', sans-serif",
+          }}
+          dir="ltr"
+        >
+          {sub}
+        </div>
+      )}
+
+      {/* Trend */}
+      {trend && (
+        <div
+          style={{
+            fontSize: 11,
+            color: trendUp ? "#10B981" : "#EF4444",
+            fontWeight: 600,
+            marginTop: 4,
+          }}
+        >
+          {trendUp ? "↑" : "↓"} {trend}
+        </div>
+      )}
+
+      {/* Gauge */}
+      {gauge && gaugeVal !== undefined && gaugeCap !== undefined && (
+        <div style={{ display: "flex", gap: 2, marginTop: 8, flexWrap: "wrap" }}>
+          {Array.from({ length: gaugeCap }, (_, i) => (
+            <div
+              key={i}
+              style={{
+                width: 10,
+                height: 5,
+                borderRadius: 3,
+                background: i < gaugeVal ? (gaugeColor ?? "#7C3AED") : "#F3F4F6",
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Expand hint */}
+      {expandLabel && (
+        <div style={{ fontSize: 10, color: "var(--text-placeholder)", marginTop: 4, fontWeight: 600 }}>
+          {expandLabel}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const [atRiskOpen, setAtRiskOpen] = useState(false);
@@ -140,308 +302,249 @@ export default function Dashboard() {
     (c) => c.status === "pending_approval" || c.status === "needs_human" || c.status === "auto_queued"
   );
 
-  const totalSlots = systemStats.supervisedCap;
-  const filledSlots = systemStats.supervisedClients;
-  const slotColor =
-    filledSlots <= 7 ? "#10B981" : filledSlots <= 9 ? "#F59E0B" : "#EF4444";
-
   const oldestMinutes = 252;
   const oldestDisplay = "4h 12m";
   const oldestUrgent = oldestMinutes > 240;
-
-  const kpis = [
-    {
-      label: "Active Clients",
-      value: systemStats.activeClients,
-      sub: `of ${systemStats.totalClients} · target ${systemStats.clientCapacity}`,
-      color: "#9B51E0",
-      accent: "#9B51E0",
-      sparkData: [32, 33, 33, 34, 34, 35, 35],
-    },
-    {
-      label: "Leads Today",
-      value: systemStats.leadsToday,
-      sub: "+12% vs yesterday",
-      color: "#10B981",
-      accent: "#10B981",
-      sparkData: [48, 55, 51, 60, 58, 62, 68],
-    },
-    {
-      label: "Pending Queue",
-      value: systemStats.pendingApprovals,
-      sub: `oldest: ${oldestDisplay}`,
-      subColor: oldestUrgent ? "#F59E0B" : undefined,
-      color: "#EF4444",
-      accent: "#EF4444",
-      urgent: true,
-      sparkData: null,
-      extraBoxShadow: oldestUrgent,
-    },
-    {
-      label: "Auto-Approved",
-      value: systemStats.autoApprovedToday,
-      sub: "today without you",
-      color: "#10B981",
-      accent: "#10B981",
-      sparkData: [8, 10, 12, 9, 11, 13, 14],
-    },
-    {
-      label: "Monthly Spend",
-      value: `₪${(systemStats.monthlySpend / 1000).toFixed(0)}K`,
-      sub: `CPL ₪${systemStats.monthlyCpl} / ₪${systemStats.monthlyCplTarget}`,
-      color: systemStats.monthlyCpl <= systemStats.monthlyCplTarget ? "#10B981" : "#F59E0B",
-      accent: systemStats.monthlyCpl <= systemStats.monthlyCplTarget ? "#10B981" : "#F59E0B",
-      sparkData: null,
-      ltr: true,
-    },
-    {
-      label: "At-Risk Clients",
-      value: mockClients.filter((c) => c.churnTier === "orange" || c.churnTier === "red").length,
-      sub: `${churnCount("red")} red · ${churnCount("orange")} orange`,
-      color: "#EA580C",
-      accent: "#EA580C",
-      urgent: mockClients.some((c) => c.churnTier === "red"),
-      sparkData: null,
-      clickable: true,
-    },
-    {
-      label: "Supervised Slots",
-      value: `${systemStats.supervisedClients}/${systemStats.supervisedCap}`,
-      sub: `${systemStats.supervisedCap - systemStats.supervisedClients} slots free`,
-      color: systemStats.supervisedClients >= 10 ? "#EF4444" : "#F59E0B",
-      accent: systemStats.supervisedClients >= 10 ? "#EF4444" : "#F59E0B",
-      sparkData: null,
-      ltr: true,
-      gauge: true,
-    },
-    {
-      label: "Agency Health",
-      value: agencyHealthScore,
-      sub: agencyHealthScore >= 70 ? "Healthy" : agencyHealthScore >= 50 ? "Watch" : "Action needed",
-      color: agencyHealthScore >= 70 ? "#10B981" : agencyHealthScore >= 50 ? "#F59E0B" : "#EF4444",
-      accent: agencyHealthScore >= 70 ? "#10B981" : agencyHealthScore >= 50 ? "#F59E0B" : "#EF4444",
-      sparkData: null,
-    },
-  ];
+  const slotColor =
+    systemStats.supervisedClients <= 7 ? "#10B981" : systemStats.supervisedClients <= 9 ? "#F59E0B" : "#EF4444";
+  const healthColor =
+    agencyHealthScore >= 70 ? "#10B981" : agencyHealthScore >= 50 ? "#F59E0B" : "#EF4444";
 
   const portfolioTrends = [
-    { label: "Autonomous", count: mockClients.filter((c) => c.level === "Autonomous").length, color: "#10B981", bg: "#ECFDF5", trendVal: 2, trendDir: "up" as const },
-    { label: "Semi-Auto", count: mockClients.filter((c) => c.level === "SemiAuto").length, color: "#F59E0B", bg: "#FFFBEB", trendVal: 0, trendDir: "neutral" as const },
-    { label: "Supervised", count: mockClients.filter((c) => c.level === "Supervised").length, color: "#EF4444", bg: "#FEF2F2", trendVal: -1, trendDir: "down" as const },
+    { label: "אוטונומי", count: mockClients.filter((c) => c.level === "Autonomous").length, color: "#10B981", trendDir: "up" as const, trendVal: 2 },
+    { label: "חצי-אוטו", count: mockClients.filter((c) => c.level === "SemiAuto").length, color: "#F59E0B", trendDir: "neutral" as const, trendVal: 0 },
+    { label: "מפוקח", count: mockClients.filter((c) => c.level === "Supervised").length, color: "#EF4444", trendDir: "down" as const, trendVal: -1 },
   ];
 
   return (
     <>
       <MorningBriefing />
 
-      {/* ── Hero band ──────────────────────────────────────────────────────── */}
-      <div style={{ background: "var(--gradient)", borderBottom: "1px solid rgba(255,255,255,0.15)" }}>
-        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "24px 24px 22px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            {/* Hero stats */}
-            <div style={{ display: "flex", gap: 32, alignItems: "flex-end" }}>
-              {[
-                { label: "Pending Queue", value: systemStats.pendingApprovals, sub: `oldest ${oldestDisplay}`, urgent: systemStats.pendingApprovals > 5 },
-                { label: "Leads Today", value: systemStats.leadsToday, sub: "+12% vs yesterday", urgent: false },
-                { label: "Agency Health", value: `${agencyHealthScore}%`, sub: agencyHealthScore >= 70 ? "All good" : "Needs attention", urgent: agencyHealthScore < 50 },
-              ].map((stat, i) => (
-                <div key={stat.label} style={{ paddingRight: i < 2 ? 32 : 0, borderRight: i < 2 ? "1px solid rgba(255,255,255,0.2)" : "none" }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.65)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>
-                    {stat.label}
-                  </div>
-                  <div className="num-display" style={{ fontSize: 48, color: stat.urgent ? "#FEF08A" : "#fff", lineHeight: 1 }}>
-                    {stat.value}
-                  </div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>
-                    {stat.sub}
-                  </div>
-                </div>
-              ))}
-            </div>
+      <div style={{ padding: "24px" }}>
 
-            {/* Right — date + badges */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
-              <div style={{ textAlign: "right" }}>
-                <div className="num-display" style={{ fontSize: 22, color: "#fff" }}>Apr 1, 2026</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>
-                  Sync: {systemStats.lastSync}
-                </div>
+        {/* ── Page header ───────────────────────────────────────── */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            marginBottom: 24,
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                fontSize: 20,
+                fontWeight: 800,
+                color: "var(--text-primary)",
+                margin: 0,
+                fontFamily: "'Heebo', sans-serif",
+              }}
+            >
+              לוח בקרה
+            </h1>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 3, fontFamily: "'Heebo', sans-serif" }}>
+              היום, 1 באפריל 2026 ·{" "}
+              <span style={{ color: "#10B981" }}>כל המערכות פעילות</span>
+              {" · "}
+              <span dir="ltr" style={{ display: "inline" }}>סנכרון: {systemStats.lastSync}</span>
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {autoApprovalQueue.length > 0 && (
+              <div
+                style={{
+                  background: "#FFFBEB",
+                  border: "1px solid #FDE68A",
+                  borderRadius: 8,
+                  padding: "5px 12px",
+                  fontSize: 12,
+                  color: "#92400E",
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontFamily: "'Heebo', sans-serif",
+                }}
+              >
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} className="pill-pulse" />
+                {autoApprovalQueue.length} הודעות לשליחה אוטומטית
               </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                {autoApprovalQueue.length > 0 && (
+            )}
+
+            {canaryDeployment.active && (
+              <div ref={canaryRef} style={{ position: "relative" }}>
+                <button
+                  onClick={() => setCanaryOpen((v) => !v)}
+                  style={{
+                    background: "#F5F3FF",
+                    border: "1px solid #DDD6FE",
+                    borderRadius: 8,
+                    padding: "5px 12px",
+                    fontSize: 12,
+                    color: "#7C3AED",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                  }}
+                >
+                  ⚗ CANARY {canaryDeployment.version}
+                </button>
+                {canaryOpen && (
                   <div
                     style={{
-                      background: "rgba(255,255,255,0.15)",
-                      border: "1px solid rgba(255,255,255,0.3)",
-                      borderRadius: 20,
-                      padding: "5px 12px",
-                      fontSize: 12,
-                      color: "#FEF08A",
-                      fontWeight: 600,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
+                      position: "absolute",
+                      top: "calc(100% + 6px)",
+                      insetInlineStart: 0,
+                      zIndex: 50,
+                      background: "#fff",
+                      border: "1px solid var(--card-border)",
+                      borderRadius: 10,
+                      padding: "14px 16px",
+                      width: 260,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
                     }}
                   >
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#FDE047", display: "inline-block" }} className="pill-pulse" />
-                    {autoApprovalQueue.length} auto-send in &lt;{Math.max(...autoApprovalQueue.map((a) => a.minutesRemaining))}min
-                  </div>
-                )}
-
-                {canaryDeployment.active && (
-                  <div ref={canaryRef} style={{ position: "relative" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#7C3AED", marginBottom: 8 }}>
+                      ⚗ Canary {canaryDeployment.version}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 6 }}>{canaryDeployment.hoursRemaining}h remaining</div>
+                    <div style={{ fontSize: 11, color: "#374151", marginBottom: 4, fontWeight: 600 }}>Clients:</div>
+                    {canaryDeployment.clients.map((c) => (
+                      <div key={c} style={{ fontSize: 11, color: "#6B7280", padding: "1px 0" }}>• {c}</div>
+                    ))}
+                    <div style={{ borderTop: "1px solid #F3F4F6", marginTop: 8, paddingTop: 8 }}>
+                      {[
+                        { label: "Approval rate", val: canaryDeployment.approvalRate, base: canaryDeployment.baselineApprovalRate, higherIsBetter: true },
+                        { label: "QA pass rate", val: canaryDeployment.qaPassRate, base: canaryDeployment.baselineQaPassRate, higherIsBetter: true },
+                        { label: "Edit rate", val: canaryDeployment.editRate, base: canaryDeployment.baselineEditRate, higherIsBetter: false },
+                      ].map((m) => {
+                        const better = m.higherIsBetter ? m.val >= m.base : m.val <= m.base;
+                        return (
+                          <div key={m.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, padding: "2px 0" }}>
+                            <span style={{ color: "#6B7280" }}>{m.label}</span>
+                            <span style={{ fontWeight: 700, color: better ? "#10B981" : "#EF4444" }}>
+                              {m.val}%{" "}
+                              <span style={{ color: "#9CA3AF", fontWeight: 400 }}>/ {m.base}%</span>
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                     <button
-                      onClick={() => setCanaryOpen((v) => !v)}
+                      onClick={() => setCanaryOpen(false)}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 5,
-                        background: "rgba(255,255,255,0.15)",
-                        border: "1px solid rgba(255,255,255,0.3)",
-                        borderRadius: 20,
-                        padding: "5px 12px",
-                        fontSize: 12,
-                        color: "#fff",
-                        fontWeight: 600,
+                        marginTop: 10,
+                        width: "100%",
+                        fontSize: 11,
+                        padding: "6px",
+                        background: "#FEF2F2",
+                        color: "#DC2626",
+                        border: "1px solid #FECACA",
+                        borderRadius: 6,
                         cursor: "pointer",
+                        fontWeight: 600,
                       }}
                     >
-                      ⚗ CANARY {canaryDeployment.version}
+                      Rollback to v2.0
                     </button>
-                    {canaryOpen && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "calc(100% + 8px)",
-                          right: 0,
-                          zIndex: 50,
-                          background: "#fff",
-                          border: "1px solid var(--card-border)",
-                          borderRadius: 12,
-                          padding: "14px 16px",
-                          width: 270,
-                          boxShadow: "0 8px 32px rgba(107,33,168,0.18)",
-                        }}
-                      >
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#7c3aed", marginBottom: 8 }}>⚗ Canary {canaryDeployment.version}</div>
-                        <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 6 }}>{canaryDeployment.hoursRemaining}h remaining</div>
-                        <div style={{ fontSize: 11, color: "#374151", marginBottom: 4, fontWeight: 600 }}>Clients:</div>
-                        {canaryDeployment.clients.map((c) => (
-                          <div key={c} style={{ fontSize: 11, color: "#6b7280", padding: "1px 0" }}>• {c}</div>
-                        ))}
-                        <div style={{ borderTop: "1px solid var(--card-border)", marginTop: 8, paddingTop: 8 }}>
-                          {[
-                            { label: "Approval rate", val: canaryDeployment.approvalRate, base: canaryDeployment.baselineApprovalRate, higherIsBetter: true },
-                            { label: "QA pass rate", val: canaryDeployment.qaPassRate, base: canaryDeployment.baselineQaPassRate, higherIsBetter: true },
-                            { label: "Edit rate", val: canaryDeployment.editRate, base: canaryDeployment.baselineEditRate, higherIsBetter: false },
-                          ].map((m) => {
-                            const better = m.higherIsBetter ? m.val >= m.base : m.val <= m.base;
-                            return (
-                              <div key={m.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, padding: "2px 0" }}>
-                                <span style={{ color: "#6b7280" }}>{m.label}</span>
-                                <span style={{ fontWeight: 700, color: better ? "#059669" : "#dc2626" }}>
-                                  {m.val}% <span style={{ color: "#9ca3af", fontWeight: 400 }}>/ {m.base}%</span>
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <button
-                          onClick={() => setCanaryOpen(false)}
-                          style={{
-                            marginTop: 10,
-                            width: "100%",
-                            fontSize: 11,
-                            padding: "6px",
-                            background: "#fef2f2",
-                            color: "#dc2626",
-                            border: "1px solid #fca5a5",
-                            borderRadius: 8,
-                            cursor: "pointer",
-                            fontWeight: 600,
-                          }}
-                        >
-                          Rollback to v2.0
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
+            )}
+
+            <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "#10B981", fontWeight: 600, fontFamily: "'Heebo', sans-serif" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22C55E", display: "inline-block" }} className="pill-pulse" />
+              פעיל
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ── Main content ──────────────────────────────────────────────────── */}
-      <div style={{ maxWidth: 1440, margin: "0 auto", padding: "20px 24px" }}>
-
-        {/* KPI Row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 10, marginBottom: 20 }}>
-          {kpis.map((kpi) => (
-            <div
-              key={kpi.label}
-              onClick={(kpi as { clickable?: boolean }).clickable ? () => setAtRiskOpen((v) => !v) : undefined}
-              className={(kpi as { extraBoxShadow?: boolean }).extraBoxShadow ? "stale-queue-pulse" : ""}
-              style={{
-                background: "#fff",
-                borderRadius: 12,
-                padding: "14px 14px 12px",
-                border: `1px solid ${kpi.urgent ? "rgba(239,68,68,0.3)" : "var(--card-border)"}`,
-                boxShadow: kpi.urgent ? "0 0 0 3px rgba(239,68,68,0.06)" : "var(--card-shadow)",
-                cursor: (kpi as { clickable?: boolean }).clickable ? "pointer" : "default",
-                borderTop: `3px solid ${kpi.accent}`,
-                transition: "box-shadow 0.15s, transform 0.1s",
-                position: "relative",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--card-shadow-hover)";
-                (e.currentTarget as HTMLDivElement).style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = kpi.urgent ? "0 0 0 3px rgba(239,68,68,0.06)" : "var(--card-shadow)";
-                (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-              }}
-            >
-              <div
-                className="num-display"
-                dir={(kpi as { ltr?: boolean }).ltr ? "ltr" : "auto"}
-                style={{ fontSize: 26, color: kpi.color, lineHeight: 1 }}
-              >
-                {kpi.value}
-              </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-primary)", marginTop: 5 }}>{kpi.label}</div>
-              <div style={{ fontSize: 10, color: (kpi as { subColor?: string }).subColor ?? "var(--text-muted)", marginTop: 2, lineHeight: 1.3 }}>
-                {kpi.sub}
-              </div>
-              {(kpi as { gauge?: boolean }).gauge && (
-                <div style={{ display: "flex", gap: 2, marginTop: 7, flexWrap: "wrap" }}>
-                  {Array.from({ length: totalSlots }, (_, i) => (
-                    <div key={i} style={{ width: 10, height: 5, borderRadius: 3, background: i < filledSlots ? slotColor : "#EDE9FE" }} />
-                  ))}
-                </div>
-              )}
-              {kpi.sparkData && (
-                <div style={{ marginTop: 8 }}>
-                  <Sparkline data={kpi.sparkData} color={kpi.accent} height={22} />
-                </div>
-              )}
-              {(kpi as { clickable?: boolean }).clickable && (
-                <div style={{ fontSize: 10, color: "#F59E0B", marginTop: 3, fontWeight: 600 }}>
-                  {atRiskOpen ? "▲ collapse" : "▼ expand"}
-                </div>
-              )}
-            </div>
-          ))}
+        {/* ── KPI Row 1 (Primary) ────────────────────────────────── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 12 }}>
+          <KpiCard
+            label="תור המתנה"
+            value={systemStats.pendingApprovals}
+            sub={`הישן ביותר: ${oldestDisplay}`}
+            subColor={oldestUrgent ? "#F59E0B" : undefined}
+            color="#EF4444"
+            urgent
+            extraPulse={oldestUrgent}
+          />
+          <KpiCard
+            label="לידים היום"
+            value={systemStats.leadsToday}
+            sub="+12% לעומת אתמול"
+            color="#7C3AED"
+            sparkData={[48, 55, 51, 60, 58, 62, 68]}
+            trend="+12%"
+            trendUp
+          />
+          <KpiCard
+            label="אושר אוטומטית"
+            value={systemStats.autoApprovedToday}
+            sub="ללא התערבותך"
+            color="#10B981"
+            sparkData={[8, 10, 12, 9, 11, 13, 14]}
+          />
+          <KpiCard
+            label="לקוחות פעילים"
+            value={systemStats.activeClients}
+            sub={`מתוך ${systemStats.totalClients} · יעד ${systemStats.clientCapacity}`}
+            color="#7C3AED"
+            sparkData={[32, 33, 33, 34, 34, 35, 35]}
+            trend="+2 החודש"
+            trendUp
+          />
         </div>
 
-        {/* At-Risk panel */}
+        {/* ── KPI Row 2 (Secondary) ──────────────────────────────── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+          <KpiCard
+            label="הוצאה חודשית"
+            value={`₪${(systemStats.monthlySpend / 1000).toFixed(0)}K`}
+            sub={`CPL ₪${systemStats.monthlyCpl} / יעד ₪${systemStats.monthlyCplTarget}`}
+            color={systemStats.monthlyCpl <= systemStats.monthlyCplTarget ? "#10B981" : "#F59E0B"}
+            ltr
+          />
+          <KpiCard
+            label="לקוחות בסיכון"
+            value={mockClients.filter((c) => c.churnTier === "orange" || c.churnTier === "red").length}
+            sub={`${churnCount("red")} אדום · ${churnCount("orange")} כתום`}
+            color="#EA580C"
+            urgent={mockClients.some((c) => c.churnTier === "red")}
+            onClick={() => setAtRiskOpen((v) => !v)}
+            expandLabel={atRiskOpen ? "▲ סגור" : "▼ הרחב"}
+          />
+          <KpiCard
+            label="מקומות מפוקחים"
+            value={`${systemStats.supervisedClients}/${systemStats.supervisedCap}`}
+            sub={`${systemStats.supervisedCap - systemStats.supervisedClients} מקומות פנויים`}
+            color={systemStats.supervisedClients >= 10 ? "#EF4444" : "#F59E0B"}
+            gauge
+            gaugeVal={systemStats.supervisedClients}
+            gaugeCap={systemStats.supervisedCap}
+            gaugeColor={slotColor}
+            ltr
+          />
+          <KpiCard
+            label="בריאות הסוכנות"
+            value={`${agencyHealthScore}%`}
+            sub={agencyHealthScore >= 70 ? "תקין" : agencyHealthScore >= 50 ? "מעקב" : "דרושה פעולה"}
+            color={healthColor}
+          />
+        </div>
+
+        {/* ── At-Risk panel ──────────────────────────────────────── */}
         {atRiskOpen && (
           <div
             style={{
               background: "#fff",
-              borderRadius: 12,
               border: "1px solid rgba(234,88,12,0.25)",
+              borderRadius: 8,
               marginBottom: 16,
               overflow: "hidden",
               boxShadow: "var(--card-shadow)",
@@ -449,7 +552,7 @@ export default function Dashboard() {
           >
             <div
               style={{
-                padding: "12px 16px",
+                padding: "10px 16px",
                 borderBottom: "1px solid rgba(234,88,12,0.15)",
                 background: "#FFF7ED",
                 display: "flex",
@@ -457,14 +560,17 @@ export default function Dashboard() {
                 alignItems: "center",
               }}
             >
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#9A3412" }}>
-                At-Risk Clients ({atRiskClients.length})
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#9A3412", fontFamily: "'Heebo', sans-serif" }}>
+                לקוחות בסיכון ({atRiskClients.length})
               </span>
-              <button onClick={() => setAtRiskOpen(false)} style={{ fontSize: 12, color: "#9ca3af", background: "none", border: "none", cursor: "pointer" }}>
+              <button
+                onClick={() => setAtRiskOpen(false)}
+                style={{ fontSize: 12, color: "#9CA3AF", background: "none", border: "none", cursor: "pointer" }}
+              >
                 ✕
               </button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 0 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
               {atRiskClients.map((c, i) => {
                 const tierColor = c.churnTier === "red" ? "#BE123C" : "#EA580C";
                 const tierBg = c.churnTier === "red" ? "#FFF1F2" : "#FFF7ED";
@@ -473,20 +579,31 @@ export default function Dashboard() {
                     key={c.id}
                     style={{
                       padding: "12px 16px",
-                      borderRight: i % 2 === 0 ? "1px solid var(--card-border)" : "none",
-                      borderBottom: "1px solid var(--card-border)",
+                      borderInlineEnd: i % 2 === 0 ? "1px solid #F3F4F6" : "none",
+                      borderBottom: "1px solid #F3F4F6",
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{c.name}</span>
-                      <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: tierBg, color: tierColor, fontWeight: 700, textTransform: "uppercase" }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>{c.name}</span>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          padding: "2px 8px",
+                          borderRadius: 20,
+                          background: tierBg,
+                          color: tierColor,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                        }}
+                      >
                         {c.churnTier}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 4 }}>
-                      Health: <span style={{ fontWeight: 700, color: tierColor }}>{c.healthScore}</span>
+                    <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 4, fontFamily: "'Heebo', sans-serif" }}>
+                      ציון בריאות:{" "}
+                      <span style={{ fontWeight: 700, color: tierColor }}>{c.healthScore}</span>
                     </div>
-                    <span style={{ fontSize: 11, color: "#9B51E0", fontWeight: 600, cursor: "pointer" }}>View →</span>
+                    <span style={{ fontSize: 11, color: "var(--brand)", fontWeight: 600, cursor: "pointer" }}>צפה ←</span>
                   </div>
                 );
               })}
@@ -494,10 +611,10 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Main 2-col grid */}
+        {/* ── Main 2-col grid ────────────────────────────────────── */}
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 14 }}>
 
-          {/* ── Left column ── */}
+          {/* Left column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
             {/* Approval queue */}
@@ -506,15 +623,19 @@ export default function Dashboard() {
             {/* Overnight Summary */}
             <div style={CARD}>
               <div style={CARD_HEADER}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Overnight Summary</span>
-                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>While you were offline</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>
+                  סיכום לילה
+                </span>
+                <span style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "'Heebo', sans-serif" }}>
+                  בזמן שהיית לא מחובר
+                </span>
               </div>
-              <div style={{ padding: "14px 16px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
+              <div style={{ padding: "14px 16px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
                 {[
-                  { label: "Leads arrived", value: overnightSummary.leadsReceived, color: "#10B981" },
-                  { label: "Auto-approved", value: overnightSummary.messagesAutoApproved, color: "#9B51E0" },
-                  { label: "Trust changes", value: overnightSummary.trustChanges, color: "#F59E0B" },
-                  { label: "Campaign acts", value: overnightSummary.campaignChanges, color: "#0693E3" },
+                  { label: "הגעת לידים", value: overnightSummary.leadsReceived, color: "#10B981" },
+                  { label: "אישור אוטומטי", value: overnightSummary.messagesAutoApproved, color: "#7C3AED" },
+                  { label: "שינויי אמון", value: overnightSummary.trustChanges, color: "#F59E0B" },
+                  { label: "פעולות קמפיין", value: overnightSummary.campaignChanges, color: "#3B82F6" },
                 ].map((s, i) => {
                   const isExpanded = expandedOvernightItem === s.label;
                   return (
@@ -524,38 +645,44 @@ export default function Dashboard() {
                       style={{
                         textAlign: "center",
                         cursor: "pointer",
-                        padding: "8px 4px",
-                        borderRight: i < 3 ? "1px solid var(--card-border)" : "none",
-                        borderRadius: 8,
-                        transition: "background 0.12s",
+                        padding: "10px 4px",
+                        borderInlineEnd: i < 3 ? "1px solid #F3F4F6" : "none",
+                        borderRadius: 6,
+                        transition: "background 0.1s",
                       }}
-                      onMouseEnter={(e) => (e.currentTarget as HTMLDivElement).style.background = "var(--brand-bg-soft)"}
+                      onMouseEnter={(e) => (e.currentTarget as HTMLDivElement).style.background = "#F9FAFB"}
                       onMouseLeave={(e) => (e.currentTarget as HTMLDivElement).style.background = "transparent"}
                     >
-                      <div className="num-display" style={{ fontSize: 32, color: s.color }}>{s.value}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, fontWeight: 500 }}>{s.label}</div>
-                      <div style={{ fontSize: 9, color: s.color, marginTop: 2, fontWeight: 700 }}>{isExpanded ? "▲" : "▼"}</div>
+                      <div className="num-display" style={{ fontSize: 30, color: s.color }}>{s.value}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 5, fontFamily: "'Heebo', sans-serif" }}>
+                        {s.label}
+                      </div>
+                      <div style={{ fontSize: 9, color: s.color, marginTop: 2, fontWeight: 700 }}>
+                        {isExpanded ? "▲" : "▼"}
+                      </div>
                     </div>
                   );
                 })}
               </div>
+
               {expandedOvernightItem && (() => {
                 const highlights = overnightItemHighlights[expandedOvernightItem] ?? overnightSummary.highlights;
-                const displayHighlights = highlights.length > 0 ? highlights : overnightSummary.highlights;
+                const list = highlights.length > 0 ? highlights : overnightSummary.highlights;
                 return (
-                  <div style={{ margin: "0 16px 14px", background: "var(--brand-bg-soft)", borderRadius: 8, padding: "10px 12px", border: "1px solid var(--card-border)" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                      {expandedOvernightItem} — Detail
+                  <div style={{ margin: "0 16px 14px", background: "#F9FAFB", borderRadius: 6, padding: "10px 12px", border: "1px solid #F3F4F6" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-placeholder)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "'Heebo', sans-serif" }}>
+                      {expandedOvernightItem} — פרטים
                     </div>
-                    {displayHighlights.map((h, i) => (
+                    {list.map((h, i) => (
                       <div key={i} style={{ fontSize: 11, color: "#374151", padding: "3px 0", display: "flex", gap: 6, alignItems: "flex-start" }}>
-                        <span style={{ color: "#9B51E0", flexShrink: 0 }}>›</span>
+                        <span style={{ color: "var(--brand)", flexShrink: 0 }}>›</span>
                         <span>{h}</span>
                       </div>
                     ))}
                   </div>
                 );
               })()}
+
               {overnightSummary.highlights.length > 0 && (
                 <div style={{ padding: "0 16px 14px" }}>
                   {overnightSummary.highlights.map((h, i) => (
@@ -563,15 +690,15 @@ export default function Dashboard() {
                       key={i}
                       style={{
                         fontSize: 11,
-                        color: "#6b7280",
+                        color: "#6B7280",
                         padding: "4px 0",
-                        borderTop: i === 0 ? "1px solid var(--card-border)" : "none",
+                        borderTop: i === 0 ? "1px solid #F3F4F6" : "none",
                         display: "flex",
                         gap: 6,
                         alignItems: "flex-start",
                       }}
                     >
-                      <span style={{ color: "#D8CFF0", flexShrink: 0 }}>›</span>
+                      <span style={{ color: "#D1D5DB", flexShrink: 0 }}>›</span>
                       <span>{h}</span>
                     </div>
                   ))}
@@ -580,24 +707,26 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* ── Right column ── */}
+          {/* Right column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-            {/* Portfolio heat map */}
+            {/* Portfolio */}
             <div style={CARD}>
               <div style={CARD_HEADER}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
-                  Portfolio{" "}
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>
+                  תיק לקוחות{" "}
                   <span style={{ color: "var(--brand)" }}>{systemStats.totalClients}</span>
-                  <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}> / {systemStats.clientCapacity} target</span>
+                  <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>
+                    {" "}/ {systemStats.clientCapacity} יעד
+                  </span>
                 </span>
                 <div style={{ display: "flex", gap: 8, fontSize: 10 }}>
                   {[
-                    { color: "#10B981", label: "Auto" },
-                    { color: "#F59E0B", label: "Semi" },
-                    { color: "#EF4444", label: "Super" },
+                    { color: "#10B981", label: "אוטו'" },
+                    { color: "#F59E0B", label: "חצי" },
+                    { color: "#EF4444", label: "מפוקח" },
                   ].map((l) => (
-                    <span key={l.label} style={{ display: "flex", alignItems: "center", gap: 3, color: "var(--text-muted)", fontWeight: 500 }}>
+                    <span key={l.label} style={{ display: "flex", alignItems: "center", gap: 3, color: "var(--text-muted)", fontWeight: 500, fontFamily: "'Heebo', sans-serif" }}>
                       <span style={{ width: 7, height: 7, borderRadius: "50%", background: l.color, display: "inline-block" }} />
                       {l.label}
                     </span>
@@ -607,12 +736,20 @@ export default function Dashboard() {
               <div style={{ padding: "12px 16px" }}>
                 <PortfolioHeatMap />
               </div>
-              <div style={{ display: "flex", borderTop: "1px solid var(--card-border)" }}>
+              <div style={{ display: "flex", borderTop: "1px solid #F3F4F6" }}>
                 {portfolioTrends.map((s, i) => (
-                  <div key={s.label} style={{ flex: 1, textAlign: "center", padding: "8px 4px", borderRight: i < 2 ? "1px solid var(--card-border)" : "none" }}>
-                    <div className="num-display" style={{ fontSize: 24, color: s.color }}>{s.count}</div>
-                    <div style={{ fontSize: 10, color: s.color, marginTop: 2, fontWeight: 600 }}>{s.label}</div>
-                    <div style={{ fontSize: 9, marginTop: 2, fontWeight: 700, color: s.trendDir === "up" ? "#10B981" : s.trendDir === "down" ? "#EF4444" : "#9B8CB5" }}>
+                  <div
+                    key={s.label}
+                    style={{
+                      flex: 1,
+                      textAlign: "center",
+                      padding: "10px 4px",
+                      borderInlineEnd: i < 2 ? "1px solid #F3F4F6" : "none",
+                    }}
+                  >
+                    <div className="num-display" style={{ fontSize: 22, color: s.color }}>{s.count}</div>
+                    <div style={{ fontSize: 10, color: s.color, marginTop: 2, fontWeight: 600, fontFamily: "'Heebo', sans-serif" }}>{s.label}</div>
+                    <div style={{ fontSize: 10, marginTop: 2, fontWeight: 700, color: s.trendDir === "up" ? "#10B981" : s.trendDir === "down" ? "#EF4444" : "#9CA3AF" }}>
                       {s.trendDir === "up" ? `+${s.trendVal} ↑` : s.trendDir === "down" ? `${s.trendVal} ↓` : "→"}
                     </div>
                   </div>
@@ -623,29 +760,31 @@ export default function Dashboard() {
             {/* Churn Risk */}
             <div style={CARD}>
               <div style={CARD_HEADER}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Churn Risk</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>
+                  סיכון נטישה
+                </span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
                 {[
-                  { tier: "green", label: "Green", color: "#059669", bg: "#ECFDF5", count: churnCount("green"), desc: "Normal" },
-                  { tier: "yellow", label: "Yellow", color: "#CA8A04", bg: "#FEFCE8", count: churnCount("yellow"), desc: "Watch" },
-                  { tier: "orange", label: "Orange", color: "#EA580C", bg: "#FFF7ED", count: churnCount("orange"), desc: "Alert 48h" },
-                  { tier: "red", label: "Red", color: "#BE123C", bg: "#FFF1F2", count: churnCount("red"), desc: "Call now" },
+                  { tier: "green", label: "ירוק", color: "#059669", bg: "#ECFDF5", count: churnCount("green"), desc: "תקין" },
+                  { tier: "yellow", label: "צהוב", color: "#CA8A04", bg: "#FEFCE8", count: churnCount("yellow"), desc: "מעקב" },
+                  { tier: "orange", label: "כתום", color: "#EA580C", bg: "#FFF7ED", count: churnCount("orange"), desc: "התראה 48h" },
+                  { tier: "red", label: "אדום", color: "#BE123C", bg: "#FFF1F2", count: churnCount("red"), desc: "התקשר עכשיו" },
                 ].map((t, i) => (
                   <div
                     key={t.tier}
                     style={{
-                      padding: "12px",
-                      borderRight: i % 2 === 0 ? "1px solid var(--card-border)" : "none",
-                      borderBottom: i < 2 ? "1px solid var(--card-border)" : "none",
+                      padding: "12px 14px",
+                      borderInlineEnd: i % 2 === 0 ? "1px solid #F3F4F6" : "none",
+                      borderBottom: i < 2 ? "1px solid #F3F4F6" : "none",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
                       <span style={{ width: 7, height: 7, borderRadius: "50%", background: t.color, display: "inline-block" }} />
                       <span style={{ fontSize: 10, fontWeight: 700, color: t.color, textTransform: "uppercase", letterSpacing: "0.04em" }}>{t.label}</span>
                     </div>
-                    <div className="num-display" style={{ fontSize: 26, color: t.color, marginTop: 3 }}>{t.count}</div>
-                    <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{t.desc}</div>
+                    <div className="num-display" style={{ fontSize: 24, color: t.color }}>{t.count}</div>
+                    <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2, fontFamily: "'Heebo', sans-serif" }}>{t.desc}</div>
                   </div>
                 ))}
               </div>
@@ -654,7 +793,9 @@ export default function Dashboard() {
             {/* Recent Leads */}
             <div style={CARD}>
               <div style={CARD_HEADER}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Recent Leads</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>
+                  לידים אחרונים
+                </span>
               </div>
               {mockLeads.slice(0, 4).map((lead, i) => (
                 <div
@@ -664,12 +805,12 @@ export default function Dashboard() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    borderBottom: i < 3 ? "1px solid var(--card-border)" : "none",
+                    borderBottom: i < 3 ? "1px solid #F9FAFB" : "none",
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{lead.name}</div>
-                    <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{lead.clientName}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>{lead.name}</div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "'Heebo', sans-serif" }}>{lead.clientName}</div>
                   </div>
                   <div style={{ display: "flex", gap: 5 }}>
                     <span
@@ -677,8 +818,8 @@ export default function Dashboard() {
                         fontSize: 10,
                         padding: "2px 8px",
                         borderRadius: 20,
-                        background: lead.source === "google" ? "#EFF6FF" : lead.source === "facebook" ? "#F5F3FF" : "#F0FDF4",
-                        color: lead.source === "google" ? "#2563EB" : lead.source === "facebook" ? "#7C3AED" : "#16A34A",
+                        background: lead.source === "google" ? "#EFF6FF" : lead.source === "facebook" ? "#F5F3FF" : "#ECFDF5",
+                        color: lead.source === "google" ? "#2563EB" : lead.source === "facebook" ? "#7C3AED" : "#059669",
                         fontWeight: 700,
                       }}
                     >
@@ -704,14 +845,18 @@ export default function Dashboard() {
             {/* Agent Log */}
             <div style={CARD}>
               <div style={CARD_HEADER}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>Agent Log</span>
-                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>₪{systemStats.aiSpendToday.toFixed(2)} today</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>
+                  יומן סוכן
+                </span>
+                <span dir="ltr" style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                  ₪{systemStats.aiSpendToday.toFixed(2)} היום
+                </span>
               </div>
               {mockSystemLogs.slice(0, 6).map((log, i) => {
                 const typeColor: Record<string, { bg: string; color: string }> = {
                   alert: { bg: "#FEF2F2", color: "#DC2626" },
                   ai: { bg: "#F5F3FF", color: "#7C3AED" },
-                  lead: { bg: "#F0FDF4", color: "#16A34A" },
+                  lead: { bg: "#ECFDF5", color: "#059669" },
                   campaign: { bg: "#EFF6FF", color: "#2563EB" },
                   system: { bg: "#F3F4F6", color: "#6B7280" },
                 };
@@ -724,7 +869,7 @@ export default function Dashboard() {
                       display: "flex",
                       alignItems: "flex-start",
                       gap: 8,
-                      borderBottom: i < 5 ? "1px solid var(--card-border)" : "none",
+                      borderBottom: i < 5 ? "1px solid #F9FAFB" : "none",
                     }}
                   >
                     <span
@@ -745,13 +890,14 @@ export default function Dashboard() {
                     </span>
                     <p style={{ fontSize: 11, color: "#374151", flex: 1, margin: 0, lineHeight: 1.4 }}>{log.message}</p>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1, flexShrink: 0 }}>
-                      <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{log.time}</span>
-                      {log.cost && <span style={{ fontSize: 10, color: "#7C3AED" }}>{log.cost}</span>}
+                      <span dir="ltr" style={{ fontSize: 10, color: "var(--text-muted)" }}>{log.time}</span>
+                      {log.cost && <span dir="ltr" style={{ fontSize: 10, color: "#7C3AED" }}>{log.cost}</span>}
                     </div>
                   </div>
                 );
               })}
             </div>
+
           </div>
         </div>
       </div>
