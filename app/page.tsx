@@ -12,6 +12,16 @@ import {
   overnightSummary,
   autoApprovalQueue,
 } from "@/lib/mock-data";
+import {
+  fetchClients,
+  fetchDashboardStats,
+  fetchRecentLeads,
+  fetchPendingConversations,
+  type DbClient,
+  type DbLead,
+  type DbConversation,
+  type DashboardStats,
+} from "@/lib/db";
 import ApprovalQueue from "@/components/ApprovalQueue";
 import MorningBriefing from "@/components/MorningBriefing";
 
@@ -36,20 +46,18 @@ function Sparkline({ data, color = "#7C3AED", height = 32 }: { data: number[]; c
 }
 
 // ── Portfolio heat map ───────────────────────────────────────────────────────
-function PortfolioHeatMap() {
-  const total = systemStats.totalClients;
-  const allDots = Array.from({ length: total }, (_, i) => {
-    const real = mockClients[i];
-    if (real) return { score: real.trustScore, budget: real.monthlyBudget, name: real.name, real: true };
-    const score = 40 + Math.floor(((i * 17) % 60));
-    return { score, budget: 3000 + ((i * 2300) % 18000), name: `Client ${i + 1}`, real: false };
-  });
+function PortfolioHeatMap({ clients }: { clients: Array<{ trustScore: number; name: string; real?: boolean }> }) {
+  const allDots = clients.map((c) => ({
+    score: c.trustScore,
+    name: c.name,
+    real: c.real !== false,
+  }));
 
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center" }}>
       {allDots.map((dot, i) => {
-        const size = Math.max(9, Math.min(18, 9 + Math.round((dot.budget / 22000) * 9)));
-        const color = dot.score >= 75 ? "#10B981" : dot.score >= 40 ? "#F59E0B" : "#EF4444";
+        const size = 11;
+        const color = dot.score >= 65 ? "#10B981" : dot.score >= 35 ? "#F59E0B" : "#EF4444";
         return (
           <a
             key={i}
@@ -286,6 +294,28 @@ export default function Dashboard() {
   const [canaryOpen, setCanaryOpen] = useState(false);
   const canaryRef = useRef<HTMLDivElement>(null);
 
+  // ── Live data from Supabase ──────────────────────────────────────────────
+  const [liveClients, setLiveClients] = useState<DbClient[] | null>(null);
+  const [liveStats, setLiveStats] = useState<DashboardStats | null>(null);
+  const [liveLeads, setLiveLeads] = useState<DbLead[] | null>(null);
+  const [liveConvs, setLiveConvs] = useState<DbConversation[] | null>(null);
+  const [liveLoading, setLiveLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetchClients(),
+      fetchDashboardStats(),
+      fetchRecentLeads(5),
+      fetchPendingConversations(20),
+    ]).then(([clients, stats, leads, convs]) => {
+      setLiveClients(clients);
+      setLiveStats(stats);
+      setLiveLeads(leads);
+      setLiveConvs(convs);
+      setLiveLoading(false);
+    });
+  }, []);
+
   useEffect(() => {
     function handleOutsideClick(e: MouseEvent) {
       if (canaryRef.current && !canaryRef.current.contains(e.target as Node)) {
@@ -295,6 +325,13 @@ export default function Dashboard() {
     if (canaryOpen) document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [canaryOpen]);
+
+  // Use live data when available, fall back to mock
+  const activeClients = liveStats?.activeClients ?? systemStats.activeClients;
+  const totalClients = liveStats?.totalClients ?? systemStats.totalClients;
+  const leadsToday = liveStats?.leadsToday ?? systemStats.leadsToday;
+  const pendingApprovals = liveStats?.pendingApprovals ?? systemStats.pendingApprovals;
+  const displayClients = liveClients ?? mockClients;
 
   const pendingConvs = mockConversations.filter(
     (c) => c.status === "pending_approval" || c.status === "needs_human" || c.status === "auto_queued"
@@ -309,9 +346,9 @@ export default function Dashboard() {
     agencyHealthScore >= 70 ? "#10B981" : agencyHealthScore >= 50 ? "#F59E0B" : "#EF4444";
 
   const portfolioTrends = [
-    { label: "אוטונומי", count: mockClients.filter((c) => c.level === "Autonomous").length, color: "#10B981", trendDir: "up" as const, trendVal: 2 },
-    { label: "חצי-אוטו", count: mockClients.filter((c) => c.level === "SemiAuto").length, color: "#F59E0B", trendDir: "neutral" as const, trendVal: 0 },
-    { label: "מפוקח", count: mockClients.filter((c) => c.level === "Supervised").length, color: "#EF4444", trendDir: "down" as const, trendVal: -1 },
+    { label: "אוטונומי", count: displayClients.filter((c) => c.level === "Autonomous").length, color: "#10B981", trendDir: "up" as const, trendVal: 2 },
+    { label: "חצי-אוטו", count: displayClients.filter((c) => c.level === "SemiAuto").length, color: "#F59E0B", trendDir: "neutral" as const, trendVal: 0 },
+    { label: "מפוקח", count: displayClients.filter((c) => c.level === "Supervised").length, color: "#EF4444", trendDir: "down" as const, trendVal: -1 },
   ];
 
   return (
@@ -452,9 +489,9 @@ export default function Dashboard() {
               </div>
             )}
 
-            <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "#10B981", fontWeight: 600 }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22C55E", display: "inline-block" }} className="pill-pulse" />
-              פעיל
+            <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: liveLoading ? "var(--text-muted)" : "#10B981", fontWeight: 600 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: liveLoading ? "#D1D5DB" : "#22C55E", display: "inline-block" }} className={liveLoading ? "" : "pill-pulse"} />
+              {liveLoading ? "מתחבר..." : "נתונים חיים"}
             </div>
           </div>
         </div>
@@ -463,7 +500,7 @@ export default function Dashboard() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 12 }}>
           <KpiCard
             label="תור המתנה"
-            value={systemStats.pendingApprovals}
+            value={pendingApprovals}
             sub={`הישן ביותר: ${oldestDisplay}`}
             subColor={oldestUrgent ? "#F59E0B" : undefined}
             color="#EF4444"
@@ -472,12 +509,10 @@ export default function Dashboard() {
           />
           <KpiCard
             label="לידים היום"
-            value={systemStats.leadsToday}
-            sub="+12% לעומת אתמול"
+            value={leadsToday}
+            sub="מהמסד החי"
             color="#7C3AED"
-            sparkData={[48, 55, 51, 60, 58, 62, 68]}
-            trend="+12%"
-            trendUp
+            sparkData={liveLoading ? null : undefined}
           />
           <KpiCard
             label="אושר אוטומטית"
@@ -488,12 +523,10 @@ export default function Dashboard() {
           />
           <KpiCard
             label="לקוחות פעילים"
-            value={systemStats.activeClients}
-            sub={`מתוך ${systemStats.totalClients} · יעד ${systemStats.clientCapacity}`}
+            value={activeClients}
+            sub={`מתוך ${totalClients} · יעד ${systemStats.clientCapacity}`}
             color="#7C3AED"
             sparkData={[32, 33, 33, 34, 34, 35, 35]}
-            trend="+2 החודש"
-            trendUp
           />
         </div>
 
@@ -711,7 +744,7 @@ export default function Dashboard() {
               <div style={CARD_HEADER}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
                   תיק לקוחות{" "}
-                  <span style={{ color: "var(--brand)" }}>{systemStats.totalClients}</span>
+                  <span style={{ color: "var(--brand)" }}>{totalClients}</span>
                   <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>
                     {" "}/ {systemStats.clientCapacity} יעד
                   </span>
@@ -730,7 +763,11 @@ export default function Dashboard() {
                 </div>
               </div>
               <div style={{ padding: "12px 16px" }}>
-                <PortfolioHeatMap />
+                {liveLoading ? (
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", padding: "8px 0" }}>טוען נתונים...</div>
+                ) : (
+                  <PortfolioHeatMap clients={displayClients.map((c) => ({ trustScore: (c as { trustScore: number }).trustScore, name: c.name, real: true }))} />
+                )}
               </div>
               <div style={{ display: "flex", borderTop: "1px solid #F3F4F6" }}>
                 {portfolioTrends.map((s, i) => (
@@ -792,50 +829,70 @@ export default function Dashboard() {
                 <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
                   לידים אחרונים
                 </span>
+                {!liveLoading && liveLeads && (
+                  <span style={{ fontSize: 11, color: "var(--brand)", fontWeight: 600 }}>נתונים חיים ✓</span>
+                )}
               </div>
-              {mockLeads.slice(0, 4).map((lead, i) => (
-                <div
-                  key={lead.id}
-                  style={{
-                    padding: "9px 16px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    borderBottom: i < 3 ? "1px solid #F9FAFB" : "none",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{lead.name}</div>
-                    <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{lead.clientName}</div>
+              {(liveLeads && liveLeads.length > 0 ? liveLeads : mockLeads.slice(0, 4)).map((lead, i) => {
+                const isLive = !!(liveLeads && liveLeads.length > 0);
+                const name = lead.name ?? "לא ידוע";
+                const clientName = isLive ? (lead as DbLead).client_name : (lead as typeof mockLeads[0]).clientName;
+                const srcRaw = isLive
+                  ? ((lead as DbLead).source as { platform?: string; type?: string } | null)?.platform
+                    ?? ((lead as DbLead).source as { platform?: string; type?: string } | null)?.type
+                    ?? "direct"
+                  : (lead as typeof mockLeads[0]).source;
+                const src = srcRaw?.toLowerCase() ?? "direct";
+                const status = lead.status ?? "new";
+                return (
+                  <div
+                    key={lead.id}
+                    style={{
+                      padding: "9px 16px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      borderBottom: i < 3 ? "1px solid #F9FAFB" : "none",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{name}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{clientName ?? "—"}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 5 }}>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          padding: "2px 8px",
+                          borderRadius: 20,
+                          background: src === "google" ? "#EFF6FF" : src === "facebook" ? "#F5F3FF" : "#ECFDF5",
+                          color: src === "google" ? "#2563EB" : src === "facebook" ? "#7C3AED" : "#059669",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {src}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          padding: "2px 8px",
+                          borderRadius: 20,
+                          background: status === "new" ? "#FEF9C3" : status === "contacted" ? "#DCFCE7" : "#F3F4F6",
+                          color: status === "new" ? "#854D0E" : status === "contacted" ? "#166534" : "#6B7280",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {status}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: 5 }}>
-                    <span
-                      style={{
-                        fontSize: 10,
-                        padding: "2px 8px",
-                        borderRadius: 20,
-                        background: lead.source === "google" ? "#EFF6FF" : lead.source === "facebook" ? "#F5F3FF" : "#ECFDF5",
-                        color: lead.source === "google" ? "#2563EB" : lead.source === "facebook" ? "#7C3AED" : "#059669",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {lead.source}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 10,
-                        padding: "2px 8px",
-                        borderRadius: 20,
-                        background: lead.status === "new" ? "#FEF9C3" : lead.status === "contacted" ? "#DCFCE7" : "#F3F4F6",
-                        color: lead.status === "new" ? "#854D0E" : lead.status === "contacted" ? "#166534" : "#6B7280",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {lead.status}
-                    </span>
-                  </div>
+                );
+              })}
+              {liveLeads && liveLeads.length === 0 && (
+                <div style={{ padding: "16px", fontSize: 12, color: "var(--text-muted)", textAlign: "center" }}>
+                  אין לידים עדיין
                 </div>
-              ))}
+              )}
             </div>
 
             {/* Agent Log */}
