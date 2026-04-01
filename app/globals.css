@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&family=Heebo:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --background: #F7F8FA;
+  --foreground: #111827;
+  --sidebar-bg: #0f1117;
+  --sidebar-text: #9ca3af;
+  --sidebar-active: #ffffff;
+  --accent: #4F46E5;
+  --accent-light: #EEF2FF;
+
+  /* Trust score palette */
+  --trust-green: #16a34a;
+  --trust-green-bg: #f0fdf4;
+  --trust-amber: #d97706;
+  --trust-amber-bg: #fefce8;
+  --trust-red: #dc2626;
+  --trust-red-bg: #fef2f2;
+
+  /* Health / churn palette — distinct from trust */
+  --health-green: #059669;
+  --health-green-bg: #ecfdf5;
+  --health-yellow: #ca8a04;
+  --health-yellow-bg: #fefce8;
+  --health-orange: #ea580c;
+  --health-orange-bg: #fff7ed;
+  --health-crimson: #be123c;
+  --health-crimson-bg: #fff1f2;
+
+  /* Campaign risk tiers */
+  --risk-auto: #16a34a;
+  --risk-auto-bg: #f0fdf4;
+  --risk-24h: #d97706;
+  --risk-24h-bg: #fffbeb;
+  --risk-immed: #dc2626;
+  --risk-immed-bg: #fef2f2;
+
+  /* Status bar */
+  --statusbar-bg: #0f1117;
+  --statusbar-height: 38px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'DM Sans', 'Heebo', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Hebrew text always uses Heebo */
+[dir="rtl"], .text-hebrew, .msg-rtl {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Heebo', sans-serif;
+}
+
+.msg-bubble-rtl {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: embed;
+  font-family: 'Heebo', sans-serif;
+}
+
+.msg-bubble-ltr {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Display numbers — DM Serif */
+.num-display {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+/* ── T4 crisis pulse ── */
+@keyframes t4BorderPulse {
+  0%, 100% { border-left-color: #dc2626; box-shadow: 0 0 0 0 rgba(220,38,38,0); }
+  50% { border-left-color: #fca5a5; box-shadow: 0 0 0 4px rgba(220,38,38,0.08); }
+}
+.t4-pulse {
+  animation: t4BorderPulse 1.8s ease-in-out infinite;
+}
+
+/* ── Orange health dot blink ── */
+@keyframes orangeBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.orange-blink { animation: orangeBlink 2s ease-in-out infinite; }
+
+/* ── Countdown ring ── */
+@keyframes countdown {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 100; }
+}
+
+/* ── Status bar pill pulse ── */
+@keyframes pillPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.pill-pulse { animation: pillPulse 1.5s ease-in-out infinite; }
+
+/* ── Slide-in drawer ── */
+.drawer-enter {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.drawer-open {
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+/* ── Sparkline SVG ── */
+.sparkline-path {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Table hover ── */
+tr.hoverable:hover { background: #F3F4F6; cursor: pointer; }
+
+/* ── Focus ring ── */
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
