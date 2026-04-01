@@ -187,7 +187,6 @@ function KpiCard({
             fontSize: 12,
             fontWeight: 600,
             color: "var(--text-muted)",
-            fontFamily: "'Heebo', sans-serif",
           }}
         >
           {label}
@@ -233,7 +232,6 @@ function KpiCard({
             fontSize: 11,
             color: subColor ?? "var(--text-muted)",
             lineHeight: 1.4,
-            fontFamily: "'Heebo', sans-serif",
           }}
           dir="ltr"
         >
@@ -338,12 +336,11 @@ export default function Dashboard() {
                 fontWeight: 800,
                 color: "var(--text-primary)",
                 margin: 0,
-                fontFamily: "'Heebo', sans-serif",
               }}
             >
               לוח בקרה
             </h1>
-            <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 3, fontFamily: "'Heebo', sans-serif" }}>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 3 }}>
               היום, 1 באפריל 2026 ·{" "}
               <span style={{ color: "#10B981" }}>כל המערכות פעילות</span>
               {" · "}
@@ -365,7 +362,6 @@ export default function Dashboard() {
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
-                  fontFamily: "'Heebo', sans-serif",
                 }}
               >
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} className="pill-pulse" />
@@ -456,7 +452,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "#10B981", fontWeight: 600, fontFamily: "'Heebo', sans-serif" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "#10B981", fontWeight: 600 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22C55E", display: "inline-block" }} className="pill-pulse" />
               פעיל
             </div>
@@ -560,7 +556,7 @@ export default function Dashboard() {
                 alignItems: "center",
               }}
             >
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#9A3412", fontFamily: "'Heebo', sans-serif" }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#9A3412" }}>
                 לקוחות בסיכון ({atRiskClients.length})
               </span>
               <button
@@ -584,7 +580,7 @@ export default function Dashboard() {
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>{c.name}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{c.name}</span>
                       <span
                         style={{
                           fontSize: 10,
@@ -599,7 +595,7 @@ export default function Dashboard() {
                         {c.churnTier}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 4, fontFamily: "'Heebo', sans-serif" }}>
+                    <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
                       ציון בריאות:{" "}
                       <span style={{ fontWeight: 700, color: tierColor }}>{c.healthScore}</span>
                     </div>
@@ -623,10 +619,10 @@ export default function Dashboard() {
             {/* Overnight Summary */}
             <div style={CARD}>
               <div style={CARD_HEADER}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
                   סיכום לילה
                 </span>
-                <span style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "'Heebo', sans-serif" }}>
+                <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
                   בזמן שהיית לא מחובר
                 </span>
               </div>
@@ -654,7 +650,7 @@ export default function Dashboard() {
                       onMouseLeave={(e) => (e.currentTarget as HTMLDivElement).style.background = "transparent"}
                     >
                       <div className="num-display" style={{ fontSize: 30, color: s.color }}>{s.value}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 5, fontFamily: "'Heebo', sans-serif" }}>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 5 }}>
                         {s.label}
                       </div>
                       <div style={{ fontSize: 9, color: s.color, marginTop: 2, fontWeight: 700 }}>
@@ -670,7 +666,7 @@ export default function Dashboard() {
                 const list = highlights.length > 0 ? highlights : overnightSummary.highlights;
                 return (
                   <div style={{ margin: "0 16px 14px", background: "#F9FAFB", borderRadius: 6, padding: "10px 12px", border: "1px solid #F3F4F6" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-placeholder)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "'Heebo', sans-serif" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-placeholder)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                       {expandedOvernightItem} — פרטים
                     </div>
                     {list.map((h, i) => (
@@ -713,7 +709,7 @@ export default function Dashboard() {
             {/* Portfolio */}
             <div style={CARD}>
               <div style={CARD_HEADER}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
                   תיק לקוחות{" "}
                   <span style={{ color: "var(--brand)" }}>{systemStats.totalClients}</span>
                   <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 400 }}>
@@ -726,7 +722,7 @@ export default function Dashboard() {
                     { color: "#F59E0B", label: "חצי" },
                     { color: "#EF4444", label: "מפוקח" },
                   ].map((l) => (
-                    <span key={l.label} style={{ display: "flex", alignItems: "center", gap: 3, color: "var(--text-muted)", fontWeight: 500, fontFamily: "'Heebo', sans-serif" }}>
+                    <span key={l.label} style={{ display: "flex", alignItems: "center", gap: 3, color: "var(--text-muted)", fontWeight: 500 }}>
                       <span style={{ width: 7, height: 7, borderRadius: "50%", background: l.color, display: "inline-block" }} />
                       {l.label}
                     </span>
@@ -748,7 +744,7 @@ export default function Dashboard() {
                     }}
                   >
                     <div className="num-display" style={{ fontSize: 22, color: s.color }}>{s.count}</div>
-                    <div style={{ fontSize: 10, color: s.color, marginTop: 2, fontWeight: 600, fontFamily: "'Heebo', sans-serif" }}>{s.label}</div>
+                    <div style={{ fontSize: 10, color: s.color, marginTop: 2, fontWeight: 600 }}>{s.label}</div>
                     <div style={{ fontSize: 10, marginTop: 2, fontWeight: 700, color: s.trendDir === "up" ? "#10B981" : s.trendDir === "down" ? "#EF4444" : "#9CA3AF" }}>
                       {s.trendDir === "up" ? `+${s.trendVal} ↑` : s.trendDir === "down" ? `${s.trendVal} ↓` : "→"}
                     </div>
@@ -760,7 +756,7 @@ export default function Dashboard() {
             {/* Churn Risk */}
             <div style={CARD}>
               <div style={CARD_HEADER}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
                   סיכון נטישה
                 </span>
               </div>
@@ -784,7 +780,7 @@ export default function Dashboard() {
                       <span style={{ fontSize: 10, fontWeight: 700, color: t.color, textTransform: "uppercase", letterSpacing: "0.04em" }}>{t.label}</span>
                     </div>
                     <div className="num-display" style={{ fontSize: 24, color: t.color }}>{t.count}</div>
-                    <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2, fontFamily: "'Heebo', sans-serif" }}>{t.desc}</div>
+                    <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2 }}>{t.desc}</div>
                   </div>
                 ))}
               </div>
@@ -793,7 +789,7 @@ export default function Dashboard() {
             {/* Recent Leads */}
             <div style={CARD}>
               <div style={CARD_HEADER}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
                   לידים אחרונים
                 </span>
               </div>
@@ -809,8 +805,8 @@ export default function Dashboard() {
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>{lead.name}</div>
-                    <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "'Heebo', sans-serif" }}>{lead.clientName}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{lead.name}</div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{lead.clientName}</div>
                   </div>
                   <div style={{ display: "flex", gap: 5 }}>
                     <span
@@ -845,7 +841,7 @@ export default function Dashboard() {
             {/* Agent Log */}
             <div style={CARD}>
               <div style={CARD_HEADER}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Heebo', sans-serif" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
                   יומן סוכן
                 </span>
                 <span dir="ltr" style={{ fontSize: 11, color: "var(--text-muted)" }}>

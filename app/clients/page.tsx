@@ -447,7 +447,7 @@ export default function Clients() {
           dir="rtl"
           style={{
             fontSize: 11, padding: "5px 10px", borderRadius: 6, border: "1px solid #e5e7eb",
-            background: "#fff", color: "#374151", fontFamily: "Heebo, sans-serif",
+            background: "#fff", color: "#374151",
             outline: "none", width: 160,
           }}
         />

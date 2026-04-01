@@ -137,7 +137,7 @@ export default function Sidebar() {
         </div>
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.2 }}>Converty</div>
-          <div style={{ fontSize: 11, color: "var(--text-placeholder)", fontFamily: "'Heebo', sans-serif" }}>מנהל מערכת</div>
+          <div style={{ fontSize: 11, color: "var(--text-placeholder)" }}>מנהל מערכת</div>
         </div>
       </div>
 
@@ -153,7 +153,6 @@ export default function Sidebar() {
                 letterSpacing: "0.06em",
                 padding: "0 8px",
                 marginBottom: 4,
-                fontFamily: "'Heebo', sans-serif",
               }}
             >
               {section.label}
@@ -180,7 +179,6 @@ export default function Sidebar() {
                     marginBottom: 2,
                     transition: "background 0.1s, color 0.1s",
                     borderInlineStart: isActive ? "2px solid var(--sidebar-active-border)" : "2px solid transparent",
-                    fontFamily: "'Heebo', sans-serif",
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
@@ -269,7 +267,7 @@ export default function Sidebar() {
               flexShrink: 0,
             }}
           />
-          <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 500, fontFamily: "'Heebo', sans-serif" }}>
+          <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 500 }}>
             {modeLabel[operatorMode]}
           </span>
         </button>

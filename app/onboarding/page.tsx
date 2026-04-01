@@ -51,7 +51,7 @@ export default function Onboarding() {
           onChange={(e) => setClientName(e.target.value)}
           placeholder="e.g. מרפאת שיניים ישראלי"
           dir="rtl"
-          style={{ width: "100%", fontSize: 13, padding: "8px 10px", borderRadius: 6, border: "1px solid #e5e7eb", fontFamily: "Heebo, sans-serif", direction: "rtl" }}
+          style={{ width: "100%", fontSize: 13, padding: "8px 10px", borderRadius: 6, border: "1px solid #e5e7eb", direction: "rtl" }}
         />
       </div>
 
@@ -87,11 +87,11 @@ export default function Onboarding() {
               <div key={i} style={{ padding: "12px 16px", borderBottom: i < SAMPLE_DRAFTS.length - 1 ? "1px solid #f3f4f6" : "none", background: approvedDrafts.includes(i) ? "#f0fdf4" : "#fff" }}>
                 <div style={{ marginBottom: 6 }}>
                   <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 2 }}>Lead said:</div>
-                  <p dir="rtl" style={{ fontSize: 12, color: "#6b7280", margin: 0, fontFamily: "Heebo, sans-serif", textAlign: "right" }}>{s.lead}</p>
+                  <p dir="rtl" style={{ fontSize: 12, color: "#6b7280", margin: 0, textAlign: "right" }}>{s.lead}</p>
                 </div>
                 <div style={{ background: "#eef2ff", borderRadius: 6, padding: "8px 10px", marginBottom: 8 }}>
                   <div style={{ fontSize: 10, color: "#4F46E5", fontWeight: 600, marginBottom: 3 }}>AI Draft</div>
-                  <p dir="rtl" style={{ fontSize: 12, color: "#312e81", margin: 0, fontFamily: "Heebo, sans-serif", textAlign: "right" }}>{s.draft}</p>
+                  <p dir="rtl" style={{ fontSize: 12, color: "#312e81", margin: 0, textAlign: "right" }}>{s.draft}</p>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
                   <button

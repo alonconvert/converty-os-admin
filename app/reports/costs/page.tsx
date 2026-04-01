@@ -229,7 +229,7 @@ export default function AiCostReport() {
               const pctColor = budgetPct > 1.5 ? "#dc2626" : budgetPct > 1 ? "#d97706" : "#059669";
               return (
                 <tr key={c.name} style={{ borderBottom: i < CLIENT_COST.length - 1 ? "1px solid #f9fafb" : "none" }}>
-                  <td style={{ padding: "9px 14px", fontSize: 12, color: "#111827", fontFamily: "Heebo, sans-serif", fontWeight: 500 }}>{c.name}</td>
+                  <td style={{ padding: "9px 14px", fontSize: 12, color: "#111827", fontWeight: 500 }}>{c.name}</td>
                   <td style={{ padding: "9px 14px", textAlign: "right", fontSize: 12, color: "#374151" }}>{c.interactions}</td>
                   <td style={{ padding: "9px 14px", textAlign: "right", fontSize: 12, color: "#374151" }}>₪{c.costToday.toFixed(2)}</td>
                   <td style={{ padding: "9px 14px", textAlign: "right", fontSize: 12, fontWeight: 600, color: "#111827" }}>₪{c.costMonth.toFixed(2)}</td>

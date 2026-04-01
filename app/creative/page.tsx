@@ -282,7 +282,7 @@ export default function Creative() {
                 {/* Card header */}
                 <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #f3f4f6" }}>
                   <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 3, background: typeCfg.bg, color: typeCfg.color }}>{typeCfg.label}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#111827", fontFamily: "Heebo, sans-serif" }}>{test.name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{test.name}</span>
                   <span style={{ fontSize: 11, color: "#9ca3af" }}>— {test.clientName}</span>
                   {verticalNote && (
                     <span style={{ fontSize: 9, color: "#6b7280", background: "#f9fafb", padding: "1px 5px", borderRadius: 3 }}>
@@ -399,7 +399,7 @@ export default function Creative() {
             <tbody>
               {LANDING_PAGES.map((lp, i) => (
                 <tr key={lp.id} style={{ borderBottom: i < LANDING_PAGES.length - 1 ? "1px solid #f9fafb" : "none" }}>
-                  <td style={{ padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "#111827", fontFamily: "Heebo, sans-serif" }}>{lp.clientName}</td>
+                  <td style={{ padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "#111827" }}>{lp.clientName}</td>
                   <td style={{ padding: "10px 14px", fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{lp.url}</td>
                   <td style={{ padding: "10px 14px" }}>
                     <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: lp.status === "active" ? "#f0fdf4" : "#f3f4f6", color: lp.status === "active" ? "#16a34a" : "#6b7280" }}>
@@ -438,13 +438,13 @@ export default function Creative() {
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                   <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 3, background: typeCfg.bg, color: typeCfg.color }}>{typeCfg.label}</span>
                   <ComplianceBadge level={compliance.level} msg={compliance.msg} />
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "#111827", fontFamily: "Heebo, sans-serif" }}>{copy.clientName}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{copy.clientName}</span>
                   <span style={{ fontSize: 11, color: "#9ca3af" }}>→ {copy.targetCampaign}</span>
                   <span style={{ fontSize: 10, color: "#9ca3af", marginLeft: "auto" }}>{copy.generatedAt}</span>
                 </div>
                 <div style={{ background: "#f9fafb", borderRadius: 7, padding: "10px 12px", marginBottom: 10 }} dir="rtl">
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", fontFamily: "Heebo, sans-serif", marginBottom: 4 }}>{copy.headline}</div>
-                  <div style={{ fontSize: 12, color: "#374151", fontFamily: "Heebo, sans-serif", lineHeight: 1.5 }}>{copy.description}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", marginBottom: 4 }}>{copy.headline}</div>
+                  <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.5 }}>{copy.description}</div>
                   {/* Character counts */}
                   {copy.type === 'search_headline' && (
                     <div style={{ fontSize: 10, color: copy.headline.length > 30 ? "#dc2626" : "#9ca3af", marginTop: 4 }} dir="ltr">

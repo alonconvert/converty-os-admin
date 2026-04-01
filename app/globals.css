@@ -60,29 +60,24 @@
 body {
   background: var(--page-bg);
   color: var(--text-primary);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Heebo', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   margin: 0;
 }
 
-/* Hebrew text */
-.text-hebrew, .msg-rtl {
-  direction: rtl;
-  text-align: right;
-  font-family: 'Heebo', sans-serif;
-}
-
+/* RTL message bubbles */
 .msg-bubble-rtl {
   direction: rtl;
   text-align: right;
   unicode-bidi: embed;
-  font-family: 'Heebo', sans-serif;
 }
 
 .msg-bubble-ltr {
   direction: ltr;
   text-align: left;
 }
+
+/* Numbers only — Plus Jakarta Sans */
 
 /* Display numbers */
 .num-display {

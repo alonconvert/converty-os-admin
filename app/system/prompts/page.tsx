@@ -189,7 +189,7 @@ export default function PromptCanaryDashboard() {
             <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 6, fontWeight: 600 }}>CANARY CLIENTS</div>
             <div style={{ display: "flex", gap: 6 }}>
               {canary.clients.map((c) => (
-                <span key={c} style={{ fontSize: 11, padding: "3px 8px", background: "#ede9fe", color: "#5b21b6", borderRadius: 5, fontFamily: "Heebo, sans-serif" }}>{c}</span>
+                <span key={c} style={{ fontSize: 11, padding: "3px 8px", background: "#ede9fe", color: "#5b21b6", borderRadius: 5 }}>{c}</span>
               ))}
             </div>
           </div>

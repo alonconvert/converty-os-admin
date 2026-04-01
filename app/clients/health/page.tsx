@@ -180,7 +180,7 @@ export default function ClientHealthDashboard() {
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {quietHealthy.map((c) => (
                 <div key={c.id} style={{ background: "#fff", border: "1px solid #bfdbfe", borderRadius: 7, padding: "7px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: "#111827", fontFamily: "Heebo, sans-serif" }}>{c.name}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "#111827" }}>{c.name}</span>
                   <span style={{ fontSize: 10, color: "#6b7280" }}>{c.lastInteractionDays}d no touch</span>
                   <button style={{ fontSize: 10, padding: "2px 7px", borderRadius: 4, border: "none", background: "#1d4ed8", color: "#fff", cursor: "pointer", fontWeight: 600 }}>
                     Send Update
@@ -229,7 +229,7 @@ export default function ClientHealthDashboard() {
                 <ScoreRing score={client.healthScore} tier={client.churnTier} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "#111827", fontFamily: "Heebo, sans-serif" }}>{client.name}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{client.name}</span>
                     <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 5px", borderRadius: 3, background: tierCfg.bg, color: tierCfg.color }}>{tierCfg.label}</span>
                     <span style={{ fontSize: 10, color: "#9ca3af" }}>{client.domain}</span>
                   </div>

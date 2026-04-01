@@ -216,7 +216,7 @@ export default function Reports() {
                   {/* Name + domain */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "#111827", fontFamily: "Heebo, sans-serif" }}>{client.name}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{client.name}</span>
                       {showHolidayChip && (
                         <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 3, background: "#f3f4f6", color: "#6b7280" }}>
                           🗓 Passover prep week
@@ -361,7 +361,7 @@ export default function Reports() {
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
               {redOrangeClients.map((c) => (
                 <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#fef2f2", borderRadius: 7, border: "1px solid #fca5a5" }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "#111827", fontFamily: "Heebo, sans-serif" }}>{c.name}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{c.name}</span>
                   <span style={{ fontSize: 10, color: "#dc2626", fontWeight: 600 }}>Review manually first</span>
                 </div>
               ))}

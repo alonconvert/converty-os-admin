@@ -336,7 +336,6 @@ export default function ApprovalQueue({ conversations }: Props) {
                         color: "#374151",
                         margin: 0,
                         textAlign: "right",
-                        fontFamily: "Heebo, sans-serif",
                         lineHeight: 1.5,
                       }}
                     >
@@ -372,7 +371,6 @@ export default function ApprovalQueue({ conversations }: Props) {
                           color: "#312e81",
                           margin: 0,
                           textAlign: "right",
-                          fontFamily: "Heebo, sans-serif",
                           lineHeight: 1.5,
                         }}
                       >
@@ -396,7 +394,6 @@ export default function ApprovalQueue({ conversations }: Props) {
                           border: "1px solid #4F46E5",
                           outline: "none",
                           resize: "vertical",
-                          fontFamily: "Heebo, sans-serif",
                           color: "#1f2937",
                           background: "#fafafa",
                           boxSizing: "border-box",
@@ -479,7 +476,6 @@ export default function ApprovalQueue({ conversations }: Props) {
                           fontSize: 11,
                           color: "#166534",
                           margin: "4px 0 0",
-                          fontFamily: "Heebo, sans-serif",
                           textAlign: "right",
                           background: "#dcfce7",
                           borderRadius: 4,

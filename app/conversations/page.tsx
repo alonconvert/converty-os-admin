@@ -186,7 +186,7 @@ function ConvCard({ conv, hideClientName, flashing, onApprove, onReject }: ConvC
             {/* Lead message — RTL */}
             <div style={{ background: "#f9fafb", borderRadius: 7, padding: "8px 11px", marginBottom: 8 }}>
               <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 3 }}>Lead said:</div>
-              <p dir="rtl" style={{ fontSize: 12, color: "#374151", margin: 0, fontFamily: "Heebo, sans-serif", textAlign: "right", lineHeight: 1.6 }}>
+              <p dir="rtl" style={{ fontSize: 12, color: "#374151", margin: 0, textAlign: "right", lineHeight: 1.6 }}>
                 {conv.lastMessage}
               </p>
             </div>
@@ -223,7 +223,7 @@ function ConvCard({ conv, hideClientName, flashing, onApprove, onReject }: ConvC
                     </div>
                   )}
                 </div>
-                <p dir="rtl" style={{ fontSize: 12, color: "#312e81", margin: 0, fontFamily: "Heebo, sans-serif", textAlign: "right", lineHeight: 1.6 }}>
+                <p dir="rtl" style={{ fontSize: 12, color: "#312e81", margin: 0, textAlign: "right", lineHeight: 1.6 }}>
                   {conv.draft}
                 </p>
                 {conv.trustDeltaOnApprove !== 0 && (
@@ -244,7 +244,7 @@ function ConvCard({ conv, hideClientName, flashing, onApprove, onReject }: ConvC
                   style={{
                     width: "100%", fontSize: 12, padding: "8px 11px", borderRadius: 7,
                     border: "1px solid #4F46E5", outline: "none", resize: "vertical",
-                    fontFamily: "Heebo, sans-serif", textAlign: "right", direction: "rtl",
+                    textAlign: "right", direction: "rtl",
                     background: "#fafafa",
                   }}
                 />
@@ -276,7 +276,7 @@ function ConvCard({ conv, hideClientName, flashing, onApprove, onReject }: ConvC
             {isHuman && allCleared && (
               <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 7, padding: "8px 11px", marginBottom: 8 }}>
                 <p style={{ fontSize: 11, color: "#16a34a", fontWeight: 600, margin: 0 }}>✓ All clear — AI resuming with:</p>
-                <p dir="rtl" style={{ fontSize: 11, color: "#166534", margin: "4px 0 0", fontFamily: "Heebo, sans-serif", textAlign: "right", background: "#dcfce7", borderRadius: 5, padding: "4px 7px" }}>
+                <p dir="rtl" style={{ fontSize: 11, color: "#166534", margin: "4px 0 0", textAlign: "right", background: "#dcfce7", borderRadius: 5, padding: "4px 7px" }}>
                   "ממשיך לאחר שאלון דיבר איתך ישירות."
                 </p>
               </div>
@@ -407,7 +407,7 @@ function NewMsgModal({ allClientNames, onClose }: NewMsgModalProps) {
             style={{
               width: "100%", fontSize: 12, padding: "8px 11px", borderRadius: 7,
               border: "1px solid #e5e7eb", outline: "none", resize: "vertical",
-              fontFamily: "Heebo, sans-serif", textAlign: "right", direction: "rtl",
+              textAlign: "right", direction: "rtl",
               background: "#fafafa", boxSizing: "border-box",
             }}
           />
