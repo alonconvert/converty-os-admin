@@ -1,32 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Heebo:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Serif+Display:ital@0;1&family=Heebo:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
-  /* ── Dispatch Terminal palette ── */
-  --page-bg: #EDEBE3;
-  --nav-bg: #111009;
-  --nav-text: #8B8780;
+  /* ── Converty brand palette ── */
+  --brand: #9B51E0;
+  --brand-dark: #6B21A8;
+  --brand-deeper: #3D1080;
+  --brand-light: #C4A0EF;
+  --brand-bg: #F5F0FD;
+  --brand-bg-soft: #FAF7FF;
+
+  /* Gradient — Converty signature */
+  --gradient: linear-gradient(135deg, #0693E3 0%, #9B51E0 100%);
+  --gradient-soft: linear-gradient(135deg, rgba(6,147,227,0.08) 0%, rgba(155,81,224,0.08) 100%);
+
+  /* Page */
+  --page-bg: #F7F5FE;
+  --card-bg: #FFFFFF;
+  --card-border: #EDE4F8;
+  --card-shadow: 0 1px 3px rgba(107,33,168,0.08), 0 4px 12px rgba(107,33,168,0.06);
+  --card-shadow-hover: 0 2px 8px rgba(107,33,168,0.12), 0 8px 24px rgba(107,33,168,0.1);
+
+  /* Nav */
+  --nav-bg: #2D0B6B;
+  --nav-text: rgba(255,255,255,0.6);
   --nav-active: #FFFFFF;
-  --metrics-bg: #F5F2EA;
-  --border: #2A2520;
-  --border-light: #D9D5CC;
-  --accent: #FF3A00;
-  --accent-dim: rgba(255, 58, 0, 0.12);
-  --card-bg: #FAFAF6;
-  --card-bg-white: #FFFFFF;
+  --metrics-bg: #FFFFFF;
 
   /* Text */
-  --text-primary: #1A1712;
-  --text-secondary: #5C584E;
-  --text-muted: #9B9688;
+  --text-primary: #1A0A3D;
+  --text-secondary: #4B5563;
+  --text-muted: #9B8CB5;
+
+  /* Semantic */
+  --success: #10B981;
+  --success-bg: #ECFDF5;
+  --warning: #F59E0B;
+  --warning-bg: #FFFBEB;
+  --danger: #EF4444;
+  --danger-bg: #FEF2F2;
+  --info: #0693E3;
+  --info-bg: #EFF6FF;
 
   /* Trust score palette */
-  --trust-green: #16a34a;
-  --trust-green-bg: #f0fdf4;
-  --trust-amber: #d97706;
-  --trust-amber-bg: #fefce8;
-  --trust-red: #dc2626;
-  --trust-red-bg: #fef2f2;
+  --trust-green: #10B981;
+  --trust-green-bg: #ECFDF5;
+  --trust-amber: #F59E0B;
+  --trust-amber-bg: #FFFBEB;
+  --trust-red: #EF4444;
+  --trust-red-bg: #FEF2F2;
 
   /* Health / churn palette */
   --health-green: #059669;
@@ -38,13 +60,18 @@
   --health-crimson: #be123c;
   --health-crimson-bg: #fff1f2;
 
-  /* Campaign risk tiers */
-  --risk-auto: #16a34a;
-  --risk-auto-bg: #f0fdf4;
-  --risk-24h: #d97706;
-  --risk-24h-bg: #fffbeb;
-  --risk-immed: #dc2626;
-  --risk-immed-bg: #fef2f2;
+  /* Campaign risk */
+  --risk-auto: #10B981;
+  --risk-auto-bg: #ECFDF5;
+  --risk-24h: #F59E0B;
+  --risk-24h-bg: #FFFBEB;
+  --risk-immed: #EF4444;
+  --risk-immed-bg: #FEF2F2;
+
+  /* Radius */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
 }
 
 * { box-sizing: border-box; }
@@ -52,7 +79,8 @@
 body {
   background: var(--page-bg);
   color: var(--text-primary);
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Heebo', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Hebrew text always uses Heebo */
@@ -74,43 +102,23 @@ body {
   text-align: left;
 }
 
-/* ── Typography classes ── */
-.kpi-number {
-  font-family: 'Bebas Neue', Impact, sans-serif;
-  letter-spacing: 0.02em;
-  line-height: 1;
-}
-
-.section-label {
-  font-family: 'Courier Prime', 'Courier New', monospace;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-.mono {
-  font-family: 'Courier Prime', 'Courier New', monospace;
-}
-
-/* Legacy num-display — mapped to Bebas Neue for consistency */
+/* Display numbers */
 .num-display {
-  font-family: 'Bebas Neue', Impact, sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
   line-height: 1;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #C4BFB4; border-radius: 0; }
+::-webkit-scrollbar-thumb { background: #D8CFF0; border-radius: 4px; }
 
 /* ── T4 crisis pulse ── */
 @keyframes t4BorderPulse {
-  0%, 100% { border-left-color: #dc2626; box-shadow: 0 0 0 0 rgba(220,38,38,0); }
-  50% { border-left-color: #fca5a5; box-shadow: 0 0 0 4px rgba(220,38,38,0.08); }
+  0%, 100% { border-left-color: var(--danger); box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+  50% { border-left-color: #fca5a5; box-shadow: 0 0 0 4px rgba(239,68,68,0.08); }
 }
 .t4-pulse {
   animation: t4BorderPulse 1.8s ease-in-out infinite;
@@ -136,10 +144,10 @@ body {
 }
 .pill-pulse { animation: pillPulse 1.5s ease-in-out infinite; }
 
-/* ── Stale queue KPI card pulse (>4h oldest item) ── */
+/* ── Stale queue KPI card pulse ── */
 @keyframes staleQueuePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(251,146,60,0); border-color: #fca5a5; }
-  50% { box-shadow: 0 0 0 4px rgba(251,146,60,0.2); border-color: #fb923c; }
+  0%, 100% { box-shadow: var(--card-shadow); border-color: #fca5a5; }
+  50% { box-shadow: 0 0 0 4px rgba(239,68,68,0.12); border-color: #ef4444; }
 }
 .stale-queue-pulse {
   animation: staleQueuePulse 2.2s ease-in-out infinite;
@@ -165,10 +173,11 @@ body {
 }
 
 /* ── Table hover ── */
-tr.hoverable:hover { background: #E8E5DC; cursor: pointer; }
+tr.hoverable:hover { background: var(--brand-bg-soft); cursor: pointer; }
 
 /* ── Focus ring ── */
 button:focus-visible, a:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }

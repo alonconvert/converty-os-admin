@@ -24,24 +24,21 @@ function ISTClock() {
     return () => clearInterval(t);
   }, []);
   return (
-    <span
-      className="mono"
-      style={{ fontSize: 11, color: "#6B6760", letterSpacing: "0.06em" }}
-    >
-      {time}
+    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", letterSpacing: "0.06em", fontVariantNumeric: "tabular-nums" }}>
+      {time} IST
     </span>
   );
 }
 
 const navItems = [
-  { label: "DASHBOARD", href: "/" },
-  { label: "CLIENTS", href: "/clients" },
-  { label: "CONVOS", href: "/conversations", badgeKey: "pendingApprovals" as const },
-  { label: "CAMPAIGNS", href: "/campaigns", badgeKey: "pendingCampaignChanges" as const },
-  { label: "CREATIVE", href: "/creative" },
-  { label: "REPORTS", href: "/reports" },
-  { label: "PULSE", href: "/pulse" },
-  { label: "SYSTEM", href: "/system", badgeKey: "criticalServices" as const, badgeAccent: true },
+  { label: "Dashboard", href: "/" },
+  { label: "Clients", href: "/clients" },
+  { label: "Conversations", href: "/conversations", badgeKey: "pendingApprovals" as const },
+  { label: "Campaigns", href: "/campaigns", badgeKey: "pendingCampaignChanges" as const },
+  { label: "Creative", href: "/creative" },
+  { label: "Reports", href: "/reports" },
+  { label: "Pulse", href: "/pulse" },
+  { label: "System", href: "/system", badgeKey: "criticalServices" as const, danger: true },
 ];
 
 const modeSequence = ["supervised", "semiAuto", "autonomous"] as const;
@@ -50,22 +47,27 @@ type OperatorModeLocal = typeof modeSequence[number];
 export default function TopNav() {
   const pathname = usePathname();
   const [operatorMode, setOperatorMode] = useState<OperatorModeLocal>(
-    operatorConfig.mode === "vacation" ? "unavailable" as OperatorModeLocal : (operatorConfig.mode as OperatorModeLocal) ?? "semiAuto"
+    operatorConfig.mode === "vacation"
+      ? "supervised" as OperatorModeLocal
+      : (operatorConfig.mode as OperatorModeLocal) ?? "semiAuto"
   );
 
   const hasT4 = systemStats.t4Active > 0;
 
   const modeLabel: Record<string, string> = {
-    supervised: "SUPERVISED",
-    semiAuto: "SEMI-AUTO",
-    autonomous: "AUTONOMOUS",
-    unavailable: "UNAVAILABLE",
+    supervised: "Supervised",
+    semiAuto: "Semi-Auto",
+    autonomous: "Autonomous",
   };
   const modeColor: Record<string, string> = {
-    supervised: "#dc2626",
-    semiAuto: "#d97706",
-    autonomous: "#16a34a",
-    unavailable: "#6B6760",
+    supervised: "#EF4444",
+    semiAuto: "#F59E0B",
+    autonomous: "#10B981",
+  };
+  const modeBg: Record<string, string> = {
+    supervised: "rgba(239,68,68,0.15)",
+    semiAuto: "rgba(245,158,11,0.15)",
+    autonomous: "rgba(16,185,129,0.15)",
   };
 
   const cycleMode = () => {
@@ -81,318 +83,202 @@ export default function TopNav() {
   };
 
   const healthColor =
-    agencyHealthScore >= 70 ? "#16a34a" : agencyHealthScore >= 50 ? "#d97706" : "#dc2626";
+    agencyHealthScore >= 70 ? "#10B981" : agencyHealthScore >= 50 ? "#F59E0B" : "#EF4444";
 
   const metrics = [
     {
-      label: "HEALTH",
-      value: `${agencyHealthScore}`,
-      unit: "/100",
+      label: "Agency Health",
+      value: `${agencyHealthScore}%`,
       color: healthColor,
     },
     {
-      label: "QUEUE",
+      label: "Queue",
       value: `${systemStats.pendingApprovals}`,
-      unit: " pending",
-      color: systemStats.pendingApprovals > 5 ? "#dc2626" : "var(--text-primary)",
+      color: systemStats.pendingApprovals > 5 ? "#EF4444" : "var(--text-primary)",
     },
     {
-      label: "LEADS",
+      label: "Leads today",
       value: `${systemStats.leadsToday}`,
-      unit: " today",
       color: "var(--text-primary)",
     },
     {
       label: "CPL",
       value: `₪${systemStats.monthlyCpl}`,
-      unit: ` / ₪${systemStats.monthlyCplTarget}`,
-      color:
-        systemStats.monthlyCpl <= systemStats.monthlyCplTarget ? "#16a34a" : "#d97706",
+      color: systemStats.monthlyCpl <= systemStats.monthlyCplTarget ? "#10B981" : "#F59E0B",
     },
     {
-      label: "AI ₪",
+      label: "AI spend",
       value: `₪${systemStats.aiSpendToday.toFixed(2)}`,
-      unit: " today",
-      color: "#7c3aed",
+      color: "#9B51E0",
     },
     {
-      label: "CLIENTS",
-      value: `${systemStats.activeClients}`,
-      unit: `/${systemStats.clientCapacity}`,
+      label: "Clients",
+      value: `${systemStats.activeClients} / ${systemStats.clientCapacity}`,
       color: "var(--text-primary)",
     },
   ];
 
   return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        background: "var(--nav-bg)",
-        borderBottom: "2px solid var(--border)",
-      }}
-    >
+    <header style={{ position: "sticky", top: 0, zIndex: 100 }}>
       {/* T4 crisis strip */}
       {hasT4 && (
         <div
           style={{
-            background: "#E83320",
-            padding: "5px 20px",
+            background: "linear-gradient(90deg, #B91C1C, #EF4444)",
+            padding: "6px 24px",
             display: "flex",
             alignItems: "center",
             gap: 10,
+            maxWidth: "100%",
           }}
         >
           <span
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "#fff",
-              display: "inline-block",
-              flexShrink: 0,
-            }}
+            style={{ width: 7, height: 7, borderRadius: "50%", background: "#fff", display: "inline-block", flexShrink: 0 }}
             className="pill-pulse"
           />
-          <span
-            className="mono"
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#fff",
-              letterSpacing: "0.12em",
-            }}
-          >
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", letterSpacing: "0.06em" }}>
             T4 CRISIS — HUMAN TAKEOVER REQUIRED
           </span>
-          <Link
-            href="/conversations"
-            style={{
-              marginLeft: "auto",
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: 11,
-              color: "rgba(255,255,255,0.75)",
-              textDecoration: "none",
-              letterSpacing: "0.06em",
-            }}
-          >
-            VIEW →
+          <Link href="/conversations" style={{ marginLeft: "auto", fontSize: 12, color: "rgba(255,255,255,0.8)", textDecoration: "none", fontWeight: 600 }}>
+            View →
           </Link>
         </div>
       )}
 
       {/* Main nav bar */}
-      <div
-        style={{
-          height: 52,
-          display: "flex",
-          alignItems: "stretch",
-          padding: "0 20px",
-          borderBottom: "1px solid #2A2520",
-        }}
-      >
-        {/* Logo */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            marginRight: 28,
-            flexShrink: 0,
-          }}
-        >
-          <span
-            style={{
-              fontFamily: "'Bebas Neue', Impact, sans-serif",
-              fontSize: 22,
-              color: "#fff",
-              letterSpacing: "0.12em",
-            }}
-          >
-            CONVERTY{" "}
-            <span style={{ color: "var(--accent)" }}>OS</span>
-          </span>
-        </div>
+      <div style={{ background: "var(--nav-bg)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", height: 56, display: "flex", alignItems: "center", padding: "0 24px", gap: 0 }}>
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 32, flexShrink: 0 }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 7,
+                background: "var(--gradient)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 14,
+                fontWeight: 800,
+                color: "#fff",
+                flexShrink: 0,
+              }}
+            >
+              Y
+            </div>
+            <span style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
+              Converty <span style={{ fontWeight: 400, opacity: 0.55 }}>OS</span>
+            </span>
+          </div>
 
-        {/* Nav links */}
-        <nav style={{ display: "flex", alignItems: "stretch", flex: 1, gap: 0 }}>
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            const badgeCount = item.badgeKey ? badgeValues[item.badgeKey] : 0;
-            const showBadge = badgeCount > 0;
+          {/* Nav links */}
+          <nav style={{ display: "flex", alignItems: "stretch", flex: 1, height: "100%" }}>
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              const badgeCount = item.badgeKey ? badgeValues[item.badgeKey] : 0;
+              const showBadge = badgeCount > 0;
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "0 13px",
-                  textDecoration: "none",
-                  fontFamily: "'Bebas Neue', Impact, sans-serif",
-                  fontSize: 14,
-                  letterSpacing: "0.07em",
-                  color: isActive ? "#fff" : "#8B8780",
-                  borderBottom: isActive
-                    ? "3px solid var(--accent)"
-                    : "3px solid transparent",
-                  borderTop: "3px solid transparent",
-                  transition: "color 0.12s",
-                  position: "relative",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive)
-                    (e.currentTarget as HTMLAnchorElement).style.color = "#D0CDC6";
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive)
-                    (e.currentTarget as HTMLAnchorElement).style.color = "#8B8780";
-                }}
-              >
-                {item.label}
-                {showBadge && (
-                  <span
-                    style={{
-                      background: item.badgeAccent ? "#ef4444" : "var(--accent)",
-                      color: "#fff",
-                      fontFamily: "'DM Sans', sans-serif",
-                      fontSize: 10,
-                      fontWeight: 700,
-                      padding: "1px 5px",
-                      minWidth: 16,
-                      textAlign: "center",
-                      letterSpacing: 0,
-                      lineHeight: "16px",
-                      display: "inline-block",
-                    }}
-                  >
-                    {badgeCount}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    padding: "0 12px",
+                    textDecoration: "none",
+                    fontSize: 13,
+                    fontWeight: isActive ? 700 : 500,
+                    color: isActive ? "#fff" : "rgba(255,255,255,0.55)",
+                    borderBottom: isActive ? "2px solid #C084FC" : "2px solid transparent",
+                    transition: "color 0.15s, border-color 0.15s",
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.85)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.55)";
+                  }}
+                >
+                  {item.label}
+                  {showBadge && (
+                    <span
+                      style={{
+                        background: item.danger ? "#EF4444" : "#C084FC",
+                        color: "#fff",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        padding: "1px 6px",
+                        borderRadius: 20,
+                        lineHeight: "16px",
+                        minWidth: 18,
+                        textAlign: "center",
+                        display: "inline-block",
+                      }}
+                    >
+                      {badgeCount}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
 
-        {/* Right side — operator mode + clock */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            flexShrink: 0,
-          }}
-        >
-          <button
-            onClick={cycleMode}
-            style={{
-              background: "transparent",
-              border: `1px solid ${modeColor[operatorMode]}`,
-              padding: "4px 10px",
-              cursor: "pointer",
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              color: modeColor[operatorMode],
-              transition: "all 0.15s",
-            }}
-          >
-            {modeLabel[operatorMode]}
-          </button>
-          <ISTClock />
+          {/* Right: operator mode + clock */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+            <button
+              onClick={cycleMode}
+              style={{
+                background: modeBg[operatorMode],
+                border: `1px solid ${modeColor[operatorMode]}`,
+                borderRadius: 20,
+                padding: "4px 12px",
+                cursor: "pointer",
+                fontSize: 11,
+                fontWeight: 700,
+                color: modeColor[operatorMode],
+                transition: "all 0.15s",
+                letterSpacing: "0.02em",
+              }}
+            >
+              {modeLabel[operatorMode]}
+            </button>
+            <ISTClock />
+          </div>
         </div>
       </div>
 
       {/* Metrics strip */}
-      <div
-        style={{
-          height: 32,
-          background: "var(--metrics-bg)",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 20px",
-          gap: 0,
-        }}
-      >
-        {metrics.map((m, i) => (
-          <div
-            key={m.label}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 7,
-              padding: "0 16px",
-              height: "100%",
-              borderRight: i < metrics.length - 1 ? "1px solid var(--border-light)" : "none",
-            }}
-          >
-            <span
-              className="mono"
+      <div style={{ background: "var(--metrics-bg)", borderBottom: "1px solid var(--card-border)", boxShadow: "0 1px 4px rgba(107,33,168,0.07)" }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", height: 36, display: "flex", alignItems: "center", padding: "0 24px" }}>
+          {metrics.map((m, i) => (
+            <div
+              key={m.label}
               style={{
-                fontSize: 9,
-                color: "var(--text-muted)",
-                letterSpacing: "0.09em",
-                textTransform: "uppercase",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "0 18px",
+                height: "100%",
+                borderRight: i < metrics.length - 1 ? "1px solid var(--card-border)" : "none",
               }}
             >
-              {m.label}
-            </span>
-            <span
-              style={{
-                fontFamily: "'Bebas Neue', Impact, sans-serif",
-                fontSize: 16,
-                color: m.color,
-                letterSpacing: "0.04em",
-                lineHeight: 1,
-              }}
-            >
-              {m.value}
-            </span>
-            {m.unit && (
-              <span
-                className="mono"
-                style={{ fontSize: 9, color: "var(--text-secondary)" }}
-              >
-                {m.unit}
+              <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>
+                {m.label}
               </span>
-            )}
+              <span style={{ fontSize: 13, fontWeight: 800, color: m.color, fontVariantNumeric: "tabular-nums" }}>
+                {m.value}
+              </span>
+            </div>
+          ))}
+          {/* Live indicator */}
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", display: "inline-block" }} className="pill-pulse" />
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#10B981" }}>Live</span>
           </div>
-        ))}
-
-        {/* Live indicator */}
-        <div
-          style={{
-            marginLeft: "auto",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: "#22c55e",
-              display: "inline-block",
-            }}
-            className="pill-pulse"
-          />
-          <span
-            className="mono"
-            style={{
-              fontSize: 9,
-              color: "var(--text-muted)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-            }}
-          >
-            LIVE
-          </span>
         </div>
       </div>
     </header>
