@@ -14,31 +14,59 @@ import {
   type ReviewAction,
 } from "@/lib/meta-api";
 
-// ── Status badge config ─────────────────────────────────────────────────────
+// ── Shared card style (matching dashboard pattern) ──────────────────────────
 
-const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  draft: { bg: "#f3f4f6", color: "#9ca3af", label: "טיוטה" },
-  generating: { bg: "#EFF6FF", color: "#3B82F6", label: "מייצר" },
-  review: { bg: "#FFFBEB", color: "#d97706", label: "בסקירה" },
-  approved: { bg: "#f0fdf4", color: "#16a34a", label: "אושר" },
-  rejected: { bg: "#fef2f2", color: "#dc2626", label: "נדחה" },
-  pending: { bg: "#FFFBEB", color: "#d97706", label: "ממתין" },
+const CARD: React.CSSProperties = {
+  background: "#fff",
+  border: "1px solid var(--card-border)",
+  borderRadius: 10,
+  boxShadow: "var(--card-shadow)",
+  overflow: "hidden",
 };
 
-function StatusBadge({ status }: { status: string }) {
+// ── Status badge config ─────────────────────────────────────────────────────
+
+const STATUS_STYLE: Record<string, { bg: string; color: string; border: string; label: string; dot?: string }> = {
+  draft:      { bg: "#f3f4f6", color: "#6b7280", border: "#e5e7eb", label: "טיוטה" },
+  generating: { bg: "#EFF6FF", color: "#1D4ED8", border: "#BFDBFE", label: "מייצר", dot: "#3B82F6" },
+  review:     { bg: "#FFFBEB", color: "#92400E", border: "#FDE68A", label: "בסקירה", dot: "#F59E0B" },
+  approved:   { bg: "#ECFDF5", color: "#065F46", border: "#A7F3D0", label: "אושר" },
+  rejected:   { bg: "#FEF2F2", color: "#991B1B", border: "#FECACA", label: "נדחה" },
+  pending:    { bg: "#FFFBEB", color: "#92400E", border: "#FDE68A", label: "ממתין", dot: "#F59E0B" },
+};
+
+function StatusBadge({ status, size = "sm" }: { status: string; size?: "sm" | "md" }) {
   const s = STATUS_STYLE[status] ?? STATUS_STYLE.draft;
+  const isSm = size === "sm";
   return (
     <span
       style={{
-        fontSize: 12,
+        fontSize: isSm ? 11 : 12,
         fontWeight: 700,
-        padding: "2px 6px",
-        borderRadius: 3,
+        padding: isSm ? "2px 7px" : "3px 10px",
+        borderRadius: 20,
         background: s.bg,
         color: s.color,
+        border: `1px solid ${s.border}`,
         whiteSpace: "nowrap",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 5,
+        letterSpacing: "0.01em",
       }}
     >
+      {s.dot && (
+        <span
+          className={status === "generating" ? "pill-pulse" : ""}
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: s.dot,
+            flexShrink: 0,
+          }}
+        />
+      )}
       {s.label}
     </span>
   );
@@ -61,12 +89,14 @@ function ImageModal({ src, onClose }: { src: string; onClose: () => void }) {
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.75)",
+        background: "rgba(0,0,0,0.8)",
+        backdropFilter: "blur(8px)",
         zIndex: 1000,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         cursor: "zoom-out",
+        animation: "backdropFadeIn 0.2s ease",
       }}
     >
       <img
@@ -75,30 +105,35 @@ function ImageModal({ src, onClose }: { src: string; onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: "90vw",
-          maxHeight: "90vh",
-          borderRadius: 8,
-          boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+          maxHeight: "85vh",
+          borderRadius: 12,
+          boxShadow: "0 25px 80px rgba(0,0,0,0.6)",
           cursor: "default",
+          animation: "adminCountUp 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       />
       <button
         onClick={onClose}
         style={{
           position: "absolute",
-          top: 16,
-          right: 16,
-          background: "rgba(255,255,255,0.9)",
+          top: 20,
+          right: 20,
+          background: "rgba(255,255,255,0.95)",
           border: "none",
           borderRadius: "50%",
-          width: 36,
-          height: 36,
-          fontSize: 18,
+          width: 40,
+          height: 40,
+          fontSize: 20,
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           color: "#374151",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+          transition: "transform 0.15s",
         }}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
       >
         &times;
       </button>
@@ -117,22 +152,34 @@ function RejectDialog({
 }) {
   const [feedback, setFeedback] = useState("");
   return (
-    <div style={{ marginTop: 8 }}>
+    <div
+      style={{
+        marginTop: 10,
+        padding: "10px 12px",
+        background: "#FEF2F2",
+        borderRadius: 8,
+        border: "1px solid #FECACA",
+      }}
+    >
+      <div style={{ fontSize: 11, fontWeight: 600, color: "#991B1B", marginBottom: 6 }}>
+        סיבת הדחייה
+      </div>
       <textarea
         value={feedback}
         onChange={(e) => setFeedback(e.target.value)}
-        placeholder="סיבת הדחייה (לא חובה)..."
+        placeholder="למה הקונספט לא מתאים? (לא חובה)..."
         dir="rtl"
         style={{
           width: "100%",
-          minHeight: 60,
-          padding: "6px 10px",
+          minHeight: 56,
+          padding: "8px 10px",
           borderRadius: 6,
-          border: "1px solid #fca5a5",
+          border: "1px solid #FECACA",
           fontSize: 12,
           fontFamily: "inherit",
           resize: "vertical",
-          marginBottom: 6,
+          marginBottom: 8,
+          background: "#fff",
         }}
       />
       <div style={{ display: "flex", gap: 6 }}>
@@ -140,14 +187,17 @@ function RejectDialog({
           onClick={() => onConfirm(feedback)}
           style={{
             fontSize: 11,
-            padding: "4px 10px",
-            borderRadius: 4,
+            padding: "5px 12px",
+            borderRadius: 6,
             border: "none",
-            background: "#dc2626",
+            background: "#DC2626",
             color: "#fff",
             cursor: "pointer",
             fontWeight: 600,
+            transition: "background 0.15s",
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#B91C1C")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "#DC2626")}
         >
           אישור דחייה
         </button>
@@ -155,11 +205,11 @@ function RejectDialog({
           onClick={onCancel}
           style={{
             fontSize: 11,
-            padding: "4px 10px",
-            borderRadius: 4,
-            border: "1px solid #e5e7eb",
+            padding: "5px 12px",
+            borderRadius: 6,
+            border: "1px solid var(--card-border)",
             background: "#fff",
-            color: "#374151",
+            color: "var(--text-secondary)",
             cursor: "pointer",
           }}
         >
@@ -170,23 +220,115 @@ function RejectDialog({
   );
 }
 
+// ── Action Button ───────────────────────────────────────────────────────────
+
+function ActionBtn({
+  children,
+  onClick,
+  disabled,
+  variant,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  variant: "approve" | "reject" | "regenerate";
+}) {
+  const styles = {
+    approve:    { bg: "#059669", hoverBg: "#047857", color: "#fff", border: "none" },
+    reject:     { bg: "#FEF2F2", hoverBg: "#FEE2E2", color: "#DC2626", border: "1px solid #FECACA" },
+    regenerate: { bg: "#FFFBEB", hoverBg: "#FEF3C7", color: "#D97706", border: "1px solid #FDE68A" },
+  };
+  const s = styles[variant];
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        fontSize: 11,
+        padding: "6px 12px",
+        borderRadius: 6,
+        border: s.border,
+        background: s.bg,
+        color: s.color,
+        cursor: disabled ? "not-allowed" : "pointer",
+        fontWeight: 600,
+        transition: "background 0.15s, transform 0.1s",
+        opacity: disabled ? 0.5 : 1,
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled) e.currentTarget.style.background = s.hoverBg;
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled) e.currentTarget.style.background = s.bg;
+      }}
+      onMouseDown={(e) => {
+        if (!disabled) e.currentTarget.style.transform = "scale(0.97)";
+      }}
+      onMouseUp={(e) => {
+        if (!disabled) e.currentTarget.style.transform = "scale(1)";
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ── Loading skeleton ────────────────────────────────────────────────────────
+
+function Skeleton({ width, height }: { width: string | number; height: number }) {
+  return (
+    <div
+      style={{
+        width,
+        height,
+        borderRadius: 6,
+        background: "linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%)",
+        backgroundSize: "400% 100%",
+        animation: "shimmer 1.5s ease infinite",
+      }}
+    />
+  );
+}
+
+function CardSkeleton() {
+  return (
+    <div style={{ ...CARD, padding: 0 }}>
+      <Skeleton width="100%" height={200} />
+      <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+        <Skeleton width={60} height={20} />
+        <Skeleton width="100%" height={48} />
+        <div style={{ display: "flex", gap: 6 }}>
+          <Skeleton width={60} height={28} />
+          <Skeleton width={50} height={28} />
+          <Skeleton width={70} height={28} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Concept Card ────────────────────────────────────────────────────────────
 
 function ConceptCard({
   concept,
+  index,
   onAction,
   onImageClick,
 }: {
   concept: MetaConcept;
+  index: number;
   onAction: (id: string, action: ReviewAction, feedback?: string) => void;
   onImageClick: (url: string) => void;
 }) {
   const [showReject, setShowReject] = useState(false);
   const [acting, setActing] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const imgUrl = concept.final_image_url || concept.image_url;
   const onImageText = concept.concept_data?.onImageText;
   const adCopy = concept.concept_data?.adCopy;
+  const overlayStyle = concept.concept_data?.visualIdea?.overlayStyle;
 
   const handleAction = async (action: ReviewAction, feedback?: string) => {
     setActing(true);
@@ -195,80 +337,154 @@ function ConceptCard({
     setShowReject(false);
   };
 
+  const isApproved = concept.status === "approved";
+  const isRejected = concept.status === "rejected";
+
   return (
     <div
+      className={`kpi-enter kpi-enter-${Math.min(index + 1, 8)}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        background: "#fff",
-        borderRadius: 10,
-        border: "1px solid #e5e7eb",
-        overflow: "hidden",
-        opacity: acting ? 0.6 : 1,
-        transition: "opacity 0.2s",
+        ...CARD,
+        opacity: acting ? 0.5 : 1,
+        transition: "opacity 0.2s, transform 0.2s, box-shadow 0.2s",
+        transform: hovered && !acting ? "translateY(-2px)" : "none",
+        boxShadow: hovered && !acting
+          ? "0 8px 25px rgba(0,0,0,0.08)"
+          : "var(--card-shadow)",
+        borderColor: isApproved
+          ? "#A7F3D0"
+          : isRejected
+            ? "#FECACA"
+            : "var(--card-border)",
       }}
     >
       {/* Image thumbnail */}
-      {imgUrl ? (
-        <img
-          src={imgUrl}
-          alt="Creative concept"
-          onClick={() => onImageClick(imgUrl)}
-          style={{
-            width: "100%",
-            aspectRatio: "1",
-            objectFit: "cover",
-            cursor: "zoom-in",
-            display: "block",
-            borderBottom: "1px solid #f3f4f6",
-          }}
-        />
-      ) : (
-        <div
-          style={{
-            width: "100%",
-            aspectRatio: "1",
-            background: "#f3f4f6",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#9ca3af",
-            fontSize: 12,
-            borderBottom: "1px solid #f3f4f6",
-          }}
-        >
-          {concept.status === "pending" ? "ממתין ליצירה..." : "אין תמונה"}
-        </div>
-      )}
+      <div style={{ position: "relative" }}>
+        {imgUrl ? (
+          <img
+            src={imgUrl}
+            alt="Creative concept"
+            onClick={() => onImageClick(imgUrl)}
+            style={{
+              width: "100%",
+              aspectRatio: "1",
+              objectFit: "cover",
+              cursor: "zoom-in",
+              display: "block",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              aspectRatio: "1",
+              background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            {concept.status === "pending" ? (
+              <>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5" strokeLinecap="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="M21 15l-5-5L5 21" />
+                </svg>
+                <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500 }}>ממתין ליצירה...</span>
+              </>
+            ) : (
+              <>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                </svg>
+                <span style={{ fontSize: 11, color: "#d1d5db" }}>אין תמונה</span>
+              </>
+            )}
+          </div>
+        )}
 
-      {/* Content */}
-      <div style={{ padding: "10px 12px" }}>
-        {/* Status */}
-        <div style={{ marginBottom: 8 }}>
+        {/* Status overlay on image corner */}
+        <div style={{ position: "absolute", top: 8, right: 8 }}>
           <StatusBadge status={concept.status} />
         </div>
 
+        {/* Overlay style tag */}
+        {overlayStyle && imgUrl && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: 8,
+              left: 8,
+              fontSize: 9,
+              fontWeight: 700,
+              padding: "2px 6px",
+              borderRadius: 4,
+              background: "rgba(0,0,0,0.6)",
+              color: "#fff",
+              backdropFilter: "blur(4px)",
+              letterSpacing: "0.03em",
+              textTransform: "uppercase",
+            }}
+          >
+            {overlayStyle}
+          </div>
+        )}
+
+        {/* Zoom hint on hover */}
+        {imgUrl && hovered && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "opacity 0.2s",
+              pointerEvents: "none",
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              <line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div style={{ padding: "12px 14px" }}>
         {/* On-image text */}
-        {onImageText && (
+        {onImageText && (onImageText.headline || onImageText.subline || onImageText.cta) && (
           <div
             dir="rtl"
             style={{
               background: "#f9fafb",
-              borderRadius: 6,
-              padding: "8px 10px",
-              marginBottom: 8,
+              borderRadius: 8,
+              padding: "10px 12px",
+              marginBottom: 10,
+              borderInlineStart: "3px solid var(--brand)",
             }}
           >
             {onImageText.headline && (
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", marginBottom: 2 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", marginBottom: 3, lineHeight: 1.4 }}>
                 {onImageText.headline}
               </div>
             )}
             {onImageText.subline && (
-              <div style={{ fontSize: 12, color: "#374151", marginBottom: 2 }}>
+              <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 3, lineHeight: 1.4 }}>
                 {onImageText.subline}
               </div>
             )}
             {onImageText.cta && (
-              <div style={{ fontSize: 11, color: "#7C3AED", fontWeight: 600 }}>
+              <div style={{ fontSize: 11, color: "var(--brand)", fontWeight: 700, marginTop: 4 }}>
                 {onImageText.cta}
               </div>
             )}
@@ -281,9 +497,9 @@ function ConceptCard({
             dir="rtl"
             style={{
               fontSize: 12,
-              color: "#6b7280",
-              lineHeight: 1.5,
-              marginBottom: 8,
+              color: "var(--text-muted)",
+              lineHeight: 1.6,
+              marginBottom: 10,
             }}
           >
             {adCopy.primaryText}
@@ -291,54 +507,31 @@ function ConceptCard({
         )}
 
         {/* Actions */}
-        {concept.status === "pending" && (
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            <button
-              onClick={() => handleAction("approved")}
-              disabled={acting}
-              style={{
-                fontSize: 11,
-                padding: "5px 10px",
-                borderRadius: 5,
-                border: "none",
-                background: "#22c55e",
-                color: "#fff",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
+        {concept.status === "pending" && !showReject && (
+          <div style={{ display: "flex", gap: 6 }}>
+            <ActionBtn variant="approve" onClick={() => handleAction("approved")} disabled={acting}>
               אישור
-            </button>
-            <button
-              onClick={() => setShowReject(true)}
-              disabled={acting}
-              style={{
-                fontSize: 11,
-                padding: "5px 10px",
-                borderRadius: 5,
-                border: "1px solid #fca5a5",
-                background: "#fef2f2",
-                color: "#dc2626",
-                cursor: "pointer",
-              }}
-            >
+            </ActionBtn>
+            <ActionBtn variant="reject" onClick={() => setShowReject(true)} disabled={acting}>
               דחייה
-            </button>
-            <button
-              onClick={() => handleAction("regenerate")}
-              disabled={acting}
-              style={{
-                fontSize: 11,
-                padding: "5px 10px",
-                borderRadius: 5,
-                border: "1px solid #fde68a",
-                background: "#FFFBEB",
-                color: "#d97706",
-                cursor: "pointer",
-              }}
-            >
+            </ActionBtn>
+            <ActionBtn variant="regenerate" onClick={() => handleAction("regenerate")} disabled={acting}>
               יצירה מחדש
-            </button>
+            </ActionBtn>
+          </div>
+        )}
+
+        {/* Approved/rejected confirmation */}
+        {isApproved && (
+          <div style={{ fontSize: 11, color: "#059669", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>
+            אושר בהצלחה
+          </div>
+        )}
+        {isRejected && (
+          <div style={{ fontSize: 11, color: "#DC2626", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            נדחה
           </div>
         )}
 
@@ -353,13 +546,50 @@ function ConceptCard({
   );
 }
 
+// ── KPI Card ────────────────────────────────────────────────────────────────
+
+function KpiCard({
+  label,
+  value,
+  color,
+  index,
+  accent,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  index: number;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={`kpi-enter kpi-enter-${index}`}
+      style={{
+        ...CARD,
+        padding: "14px 16px",
+        borderTop: accent ? `3px solid ${color}` : undefined,
+      }}
+    >
+      <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6, fontWeight: 500 }}>{label}</div>
+      <div
+        className="num-display"
+        style={{ fontSize: 28, color, lineHeight: 1 }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
 // ── Batch Detail View ───────────────────────────────────────────────────────
 
-function BatchDetail({ batchId }: { batchId: string }) {
+function BatchDetail({ batchId, clients }: { batchId: string; clients: DbClient[] }) {
   const [concepts, setConcepts] = useState<MetaConcept[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalImage, setModalImage] = useState<string | null>(null);
+
+  const clientMap = Object.fromEntries(clients.map((c) => [c.id, c.name]));
 
   const loadConcepts = useCallback(async () => {
     try {
@@ -399,109 +629,148 @@ function BatchDetail({ batchId }: { batchId: string }) {
   const pending = concepts.filter((c) => c.status === "pending").length;
 
   return (
-    <div style={{ padding: "18px 16px", maxWidth: 1100 }}>
+    <div style={{ padding: "24px 16px", maxWidth: 1100 }}>
       {modalImage && <ImageModal src={modalImage} onClose={() => setModalImage(null)} />}
 
-      {/* Back link + header */}
+      {/* Back link */}
       <Link
         href="/creatives"
         style={{
           fontSize: 12,
-          color: "#6b7280",
+          color: "var(--text-muted)",
           textDecoration: "none",
           display: "inline-flex",
           alignItems: "center",
-          gap: 4,
-          marginBottom: 8,
+          gap: 5,
+          marginBottom: 12,
+          transition: "color 0.15s",
         }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--brand)")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
       >
-        <span style={{ fontSize: 14 }}>&larr;</span> חזרה לרשימה
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        חזרה לרשימה
       </Link>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
         <div>
-          <h1 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", margin: 0, lineHeight: 1.2 }}>
             סקירת באצ׳
           </h1>
-          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 2, fontFamily: "monospace" }}>
-            {batchId}
+          <p style={{ fontSize: 11, color: "var(--text-placeholder)", marginTop: 4, fontFamily: "monospace", letterSpacing: "0.02em" }}>
+            {batchId.slice(0, 8)}...
           </p>
         </div>
+        {!loading && concepts.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Progress bar */}
+            <div style={{ width: 120, height: 6, borderRadius: 3, background: "#f3f4f6", overflow: "hidden" }}>
+              <div
+                style={{
+                  height: "100%",
+                  borderRadius: 3,
+                  width: `${((approved + rejected) / concepts.length) * 100}%`,
+                  background: rejected > 0 && approved === 0
+                    ? "#DC2626"
+                    : "linear-gradient(90deg, #059669, #10B981)",
+                  transition: "width 0.4s ease",
+                }}
+              />
+            </div>
+            <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>
+              {approved + rejected}/{concepts.length}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Stats row */}
       {!loading && (
         <div
           className="responsive-grid-4"
-          style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}
+          style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 18 }}
         >
-          {[
-            { label: "סה״כ", value: concepts.length, color: "#374151" },
-            { label: "אושרו", value: approved, color: "#16a34a" },
-            { label: "נדחו", value: rejected, color: "#dc2626" },
-            { label: "ממתינים", value: pending, color: "#d97706" },
-          ].map((kpi) => (
-            <div
-              key={kpi.label}
-              style={{
-                background: "#fff",
-                borderRadius: 10,
-                border: "1px solid #e5e7eb",
-                padding: "12px 14px",
-              }}
-            >
-              <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>{kpi.label}</div>
-              <div style={{ fontSize: 26, fontWeight: 700, color: kpi.color, lineHeight: 1.1 }}>
-                {kpi.value}
-              </div>
-            </div>
-          ))}
+          <KpiCard label="סה״כ" value={concepts.length} color="var(--text-secondary)" index={1} />
+          <KpiCard label="אושרו" value={approved} color="#059669" index={2} accent={approved > 0} />
+          <KpiCard label="נדחו" value={rejected} color="#DC2626" index={3} accent={rejected > 0} />
+          <KpiCard label="ממתינים" value={pending} color="#D97706" index={4} accent={pending > 0} />
         </div>
       )}
 
       {/* Generating notice */}
       {hasGenerating && (
         <div
+          className="kpi-enter kpi-enter-5"
           style={{
             background: "#EFF6FF",
             border: "1px solid #BFDBFE",
-            borderRadius: 8,
-            padding: "10px 14px",
-            marginBottom: 14,
+            borderRadius: 10,
+            padding: "12px 16px",
+            marginBottom: 16,
             fontSize: 12,
             color: "#1D4ED8",
             display: "flex",
             alignItems: "center",
-            gap: 8,
+            gap: 10,
+            fontWeight: 500,
           }}
         >
-          <span className="pill-pulse" style={{ width: 8, height: 8, borderRadius: "50%", background: "#3B82F6", flexShrink: 0 }} />
-          יצירת תמונות בתהליך — הדף מתעדכן אוטומטית כל 10 שניות
+          <span
+            className="pill-pulse"
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "#3B82F6",
+              flexShrink: 0,
+            }}
+          />
+          <span>יצירת תמונות בתהליך — הדף מתעדכן אוטומטית כל 10 שניות</span>
         </div>
       )}
 
       {/* Content */}
       {loading ? (
-        <div style={{ fontSize: 13, color: "#9ca3af", padding: "40px 0", textAlign: "center" }}>
-          טוען קונספטים...
+        <div
+          className="responsive-grid-4"
+          style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}
+        >
+          {[1, 2, 3].map((i) => (
+            <CardSkeleton key={i} />
+          ))}
         </div>
       ) : error ? (
-        <div style={{ fontSize: 13, color: "#dc2626", padding: "40px 0", textAlign: "center" }}>
-          {error}
+        <div style={{ ...CARD, padding: "48px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#DC2626", marginBottom: 6 }}>שגיאה בטעינה</div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{error}</div>
         </div>
       ) : concepts.length === 0 ? (
-        <div style={{ fontSize: 13, color: "#9ca3af", padding: "40px 0", textAlign: "center" }}>
-          אין קונספטים עדיין — הבאצ׳ ייווצר בקרוב
+        <div style={{ ...CARD, padding: "48px 20px", textAlign: "center" }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 12 }}>
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="M21 15l-5-5L5 21" />
+          </svg>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
+            אין קונספטים עדיין
+          </div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            הבאצ׳ ייווצר בקרוב — הדף יתעדכן אוטומטית
+          </div>
         </div>
       ) : (
         <div
           className="responsive-grid-4"
           style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}
         >
-          {concepts.map((concept) => (
+          {concepts.map((concept, i) => (
             <ConceptCard
               key={concept.id}
               concept={concept}
+              index={i}
               onAction={handleAction}
               onImageClick={(url) => setModalImage(url)}
             />
@@ -545,22 +814,24 @@ function BatchList({ clients }: { clients: DbClient[] }) {
   const approvedCount = batches.filter((b) => b.status === "approved").length;
   const rejectedCount = batches.filter((b) => b.status === "rejected").length;
 
-  const statusTabs: { key: BatchStatus | "all"; label: string }[] = [
-    { key: "all", label: `הכל (${total})` },
+  const statusTabs: { key: BatchStatus | "all"; label: string; count?: number }[] = [
+    { key: "all", label: "הכל", count: total },
     { key: "draft", label: "טיוטה" },
     { key: "generating", label: "בייצור" },
-    { key: "review", label: "בסקירה" },
+    { key: "review", label: "בסקירה", count: inReview },
     { key: "approved", label: "אושרו" },
     { key: "rejected", label: "נדחו" },
   ];
 
   return (
-    <div style={{ padding: "18px 16px", maxWidth: 1100 }}>
+    <div style={{ padding: "24px 16px", maxWidth: 1100 }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0 }}>Meta קריאייטיב</h1>
-          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>
+            Meta קריאייטיב
+          </h1>
+          <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>
             ניהול קריאייטיב — יצירת באנרים, סקירה ופרסום
           </p>
         </div>
@@ -568,94 +839,114 @@ function BatchList({ clients }: { clients: DbClient[] }) {
           href="/creatives/new"
           style={{
             fontSize: 12,
-            padding: "7px 14px",
-            borderRadius: 6,
+            padding: "8px 16px",
+            borderRadius: 8,
             border: "none",
-            background: "#7C3AED",
+            background: "var(--brand)",
             color: "#fff",
             cursor: "pointer",
-            fontWeight: 600,
+            fontWeight: 700,
             textDecoration: "none",
-            display: "inline-block",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            boxShadow: "0 2px 8px rgba(124,58,237,0.25)",
+            transition: "transform 0.15s, box-shadow 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 4px 12px rgba(124,58,237,0.35)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 2px 8px rgba(124,58,237,0.25)";
           }}
         >
-          + באצ׳ חדש
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          באצ׳ חדש
         </Link>
       </div>
 
       {/* KPI row */}
       <div
         className="responsive-grid-4"
-        style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}
+        style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}
       >
-        {[
-          { label: "סה״כ באצ׳ים", value: total, color: "#374151" },
-          { label: "בסקירה", value: inReview, color: inReview > 0 ? "#d97706" : "#9ca3af" },
-          { label: "אושרו", value: approvedCount, color: "#16a34a" },
-          { label: "נדחו", value: rejectedCount, color: "#dc2626" },
-        ].map((kpi) => (
-          <div
-            key={kpi.label}
-            style={{
-              background: "#fff",
-              borderRadius: 10,
-              border: "1px solid #e5e7eb",
-              padding: "12px 14px",
-            }}
-          >
-            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>{kpi.label}</div>
-            <div style={{ fontSize: 26, fontWeight: 700, color: kpi.color, lineHeight: 1.1 }}>
-              {kpi.value}
-            </div>
-          </div>
-        ))}
+        <KpiCard label="סה״כ באצ׳ים" value={total} color="var(--text-secondary)" index={1} />
+        <KpiCard label="בסקירה" value={inReview} color="#D97706" index={2} accent={inReview > 0} />
+        <KpiCard label="אושרו" value={approvedCount} color="#059669" index={3} />
+        <KpiCard label="נדחו" value={rejectedCount} color="#DC2626" index={4} />
       </div>
 
-      {/* Filters: status tabs + client dropdown */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
+      {/* Filters */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
         <div
           style={{
             display: "flex",
             gap: 2,
             background: "#f3f4f6",
-            borderRadius: 8,
+            borderRadius: 10,
             padding: 3,
-            width: "fit-content",
           }}
         >
-          {statusTabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setStatusFilter(tab.key)}
-              style={{
-                fontSize: 12,
-                padding: "5px 14px",
-                borderRadius: 6,
-                border: "none",
-                cursor: "pointer",
-                fontWeight: 600,
-                background: statusFilter === tab.key ? "#fff" : "transparent",
-                color: statusFilter === tab.key ? "#111827" : "#9ca3af",
-                boxShadow: statusFilter === tab.key ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {statusTabs.map((tab) => {
+            const isActive = statusFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                style={{
+                  fontSize: 12,
+                  padding: "5px 12px",
+                  borderRadius: 8,
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  background: isActive ? "#fff" : "transparent",
+                  color: isActive ? "var(--text-primary)" : "var(--text-placeholder)",
+                  boxShadow: isActive ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                  transition: "all 0.15s",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                {tab.label}
+                {tab.count !== undefined && tab.count > 0 && (
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      background: isActive ? "var(--brand)" : "#d1d5db",
+                      color: "#fff",
+                      padding: "1px 5px",
+                      borderRadius: 20,
+                      lineHeight: "14px",
+                    }}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         <select
           value={clientFilter}
           onChange={(e) => setClientFilter(e.target.value)}
           style={{
-            padding: "5px 10px",
-            borderRadius: 6,
-            border: "1px solid #e5e7eb",
+            padding: "6px 12px",
+            borderRadius: 8,
+            border: "1px solid var(--card-border)",
             fontSize: 12,
             fontFamily: "inherit",
             background: "#fff",
-            color: "#111827",
+            color: "var(--text-primary)",
             cursor: "pointer",
+            boxShadow: "var(--card-shadow)",
           }}
         >
           <option value="">כל הלקוחות</option>
@@ -669,49 +960,68 @@ function BatchList({ clients }: { clients: DbClient[] }) {
 
       {/* Table */}
       {loading ? (
-        <div style={{ fontSize: 13, color: "#9ca3af", padding: "40px 0", textAlign: "center" }}>
-          טוען באצ׳ים...
+        <div style={{ ...CARD, padding: "48px 20px", textAlign: "center" }}>
+          <div className="pill-pulse" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+            טוען באצ׳ים...
+          </div>
         </div>
       ) : error ? (
-        <div style={{ fontSize: 13, color: "#dc2626", padding: "40px 0", textAlign: "center" }}>
-          {error}
+        <div style={{ ...CARD, padding: "48px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#DC2626", marginBottom: 6 }}>שגיאה</div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{error}</div>
         </div>
       ) : batches.length === 0 ? (
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 10,
-            border: "1px solid #e5e7eb",
-            padding: "40px 0",
-            textAlign: "center",
-            color: "#9ca3af",
-            fontSize: 13,
-          }}
-        >
-          אין באצ׳ים עדיין —{" "}
-          <Link href="/creatives/new" style={{ color: "#7C3AED", textDecoration: "underline" }}>
+        <div style={{ ...CARD, padding: "56px 20px", textAlign: "center" }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1" strokeLinecap="round" style={{ marginBottom: 16 }}>
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="M21 15l-5-5L5 21" />
+          </svg>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
+            אין באצ׳ים עדיין
+          </div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 16 }}>
+            צור את הבאצ׳ הראשון שלך כדי להתחיל לייצר קריאייטיב
+          </div>
+          <Link
+            href="/creatives/new"
+            style={{
+              fontSize: 12,
+              padding: "8px 20px",
+              borderRadius: 8,
+              background: "var(--brand)",
+              color: "#fff",
+              textDecoration: "none",
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
             צור באצ׳ ראשון
           </Link>
         </div>
       ) : (
-        <div
-          className="responsive-table-wrap"
-          style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}
-        >
+        <div className="responsive-table-wrap" style={{ ...CARD }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
             <thead>
               <tr style={{ background: "#f9fafb" }}>
-                {["לקוח", "תאריך", "סטטוס", "קונספטים", "אושרו", "נדחו"].map((h) => (
+                {["לקוח", "תאריך", "סטטוס", "קונספטים"].map((h) => (
                   <th
                     key={h}
                     style={{
-                      padding: "9px 14px",
+                      padding: "10px 16px",
                       textAlign: "right",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "#9ca3af",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "var(--text-placeholder)",
                       borderBottom: "1px solid #f3f4f6",
                       whiteSpace: "nowrap",
+                      letterSpacing: "0.03em",
+                      textTransform: "uppercase",
                     }}
                   >
                     {h}
@@ -738,25 +1048,20 @@ function BatchList({ clients }: { clients: DbClient[] }) {
                     style={{
                       borderBottom: i < batches.length - 1 ? "1px solid #f9fafb" : "none",
                       cursor: "pointer",
+                      transition: "background 0.1s",
                     }}
                   >
-                    <td style={{ padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "#111827" }}>
-                      {clientMap[batch.client_id] || batch.client_id}
+                    <td style={{ padding: "12px 16px", fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>
+                      {clientMap[batch.client_id] || batch.client_id.slice(0, 8) + "..."}
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "#6b7280" }} dir="ltr">
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: "var(--text-muted)", fontVariantNumeric: "tabular-nums" }} dir="ltr">
                       {date}
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td style={{ padding: "12px 16px" }}>
                       <StatusBadge status={batch.status} />
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "#374151", textAlign: "center" }}>
+                    <td style={{ padding: "12px 16px", fontSize: 13, color: "var(--text-secondary)", fontWeight: 600 }}>
                       {batch.batch_size}
-                    </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "#16a34a", textAlign: "center" }}>
-                      —
-                    </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "#dc2626", textAlign: "center" }}>
-                      —
                     </td>
                   </tr>
                 );
@@ -769,7 +1074,7 @@ function BatchList({ clients }: { clients: DbClient[] }) {
   );
 }
 
-// ── Main page component (reads search params) ───────────────────────────────
+// ── Main page component ─────────────────────────────────────────────────────
 
 function CreativesContent() {
   const searchParams = useSearchParams();
@@ -781,7 +1086,7 @@ function CreativesContent() {
   }, []);
 
   if (batchId) {
-    return <BatchDetail batchId={batchId} />;
+    return <BatchDetail batchId={batchId} clients={clients} />;
   }
 
   return <BatchList clients={clients} />;
@@ -791,8 +1096,10 @@ export default function CreativesPage() {
   return (
     <Suspense
       fallback={
-        <div style={{ padding: "40px 16px", textAlign: "center", color: "#9ca3af", fontSize: 13 }}>
-          טוען...
+        <div style={{ padding: "48px 16px", textAlign: "center" }}>
+          <div className="pill-pulse" style={{ color: "var(--text-muted)", fontSize: 13 }}>
+            טוען...
+          </div>
         </div>
       }
     >

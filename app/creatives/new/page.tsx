@@ -6,6 +6,14 @@ import Link from "next/link";
 import { fetchClients, type DbClient } from "@/lib/db";
 import { createBatch } from "@/lib/meta-api";
 
+const CARD: React.CSSProperties = {
+  background: "#fff",
+  border: "1px solid var(--card-border)",
+  borderRadius: 10,
+  boxShadow: "var(--card-shadow)",
+  overflow: "hidden",
+};
+
 export default function NewBatchPage() {
   const router = useRouter();
   const [clients, setClients] = useState<DbClient[]>([]);
@@ -48,226 +56,418 @@ export default function NewBatchPage() {
     }
   };
 
+  const selectedClient = clients.find((c) => c.id === clientId);
+
   return (
-    <div style={{ padding: "18px 16px", maxWidth: 1100 }}>
+    <div style={{ padding: "24px 16px", maxWidth: 1100 }}>
+      {/* Back link */}
+      <Link
+        href="/creatives"
+        style={{
+          fontSize: 12,
+          color: "var(--text-muted)",
+          textDecoration: "none",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 5,
+          marginBottom: 12,
+          transition: "color 0.15s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--brand)")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        חזרה לרשימה
+      </Link>
+
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <Link
-          href="/creatives"
-          style={{
-            fontSize: 12,
-            color: "#6b7280",
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            marginBottom: 8,
-          }}
-        >
-          <span style={{ fontSize: 14 }}>&larr;</span> חזרה לרשימה
-        </Link>
-        <h1 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>
           באצ׳ קריאייטיב חדש
         </h1>
-        <p style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-          יצירת סט תמונות חדש ללקוח
+        <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>
+          יצירת סט תמונות חדש ללקוח — מטרנסקריפט לתמונות מוכנות לפרסום
         </p>
       </div>
 
-      {/* Form card */}
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 10,
-          border: "1px solid #e5e7eb",
-          padding: "20px 24px",
-          maxWidth: 600,
-        }}
-      >
-        {loading ? (
-          <div style={{ fontSize: 13, color: "#9ca3af", padding: "20px 0" }}>טוען לקוחות...</div>
-        ) : (
-          <>
-            {/* Client select */}
-            <div style={{ marginBottom: 18 }}>
-              <label
-                style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6 }}
-              >
-                לקוח
-              </label>
-              <select
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  borderRadius: 6,
-                  border: "1px solid #e5e7eb",
-                  fontSize: 13,
-                  fontFamily: "inherit",
-                  background: "#fff",
-                  color: "#111827",
-                  cursor: "pointer",
-                }}
-              >
-                <option value="">— בחר לקוח —</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Batch size slider */}
-            <div style={{ marginBottom: 18 }}>
-              <label
-                style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6 }}
-              >
-                כמות קריאייטיבים
-              </label>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <input
-                  type="range"
-                  min={1}
-                  max={50}
-                  value={batchSize}
-                  onChange={(e) => setBatchSize(Number(e.target.value))}
-                  style={{ flex: 1, accentColor: "#7C3AED" }}
-                />
-                <span
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 700,
-                    color: "#7C3AED",
-                    minWidth: 32,
-                    textAlign: "center",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {batchSize}
-                </span>
-              </div>
-              <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
-                1–50 תמונות לכל באצ׳
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16, alignItems: "start" }} className="responsive-grid-2-sidebar">
+        {/* Form card */}
+        <div style={{ ...CARD, padding: "24px 28px" }} className="kpi-enter kpi-enter-1">
+          {loading ? (
+            <div style={{ padding: "32px 0", textAlign: "center" }}>
+              <div className="pill-pulse" style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                טוען לקוחות...
               </div>
             </div>
-
-            {/* Transcript source toggle */}
-            <div style={{ marginBottom: 18 }}>
-              <label
-                style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6 }}
-              >
-                מקור טרנסקריפט
-              </label>
-              <div
-                style={{
-                  display: "flex",
-                  gap: 2,
-                  background: "#f3f4f6",
-                  borderRadius: 8,
-                  padding: 3,
-                  width: "fit-content",
-                  marginBottom: 10,
-                }}
-              >
-                {(
-                  [
-                    { key: "auto", label: "אוטומטי" },
-                    { key: "paste", label: "הדבקה ידנית" },
-                  ] as const
-                ).map((opt) => (
-                  <button
-                    key={opt.key}
-                    onClick={() => setTranscriptMode(opt.key)}
+          ) : (
+            <>
+              {/* Step 1: Client */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <span
                     style={{
-                      fontSize: 12,
-                      padding: "5px 14px",
-                      borderRadius: 6,
-                      border: "none",
-                      cursor: "pointer",
-                      fontWeight: 600,
-                      background: transcriptMode === opt.key ? "#fff" : "transparent",
-                      color: transcriptMode === opt.key ? "#111827" : "#9ca3af",
-                      boxShadow: transcriptMode === opt.key ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      background: clientId ? "#059669" : "var(--brand)",
+                      color: "#fff",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      transition: "background 0.2s",
                     }}
                   >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-
-              {transcriptMode === "paste" ? (
-                <textarea
-                  value={transcriptText}
-                  onChange={(e) => setTranscriptText(e.target.value)}
-                  placeholder="הדבק את הטרנסקריפט כאן..."
-                  dir="rtl"
+                    {clientId ? "✓" : "1"}
+                  </span>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+                    בחירת לקוח
+                  </label>
+                </div>
+                <select
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
                   style={{
                     width: "100%",
-                    minHeight: 120,
-                    padding: "10px 12px",
-                    borderRadius: 6,
-                    border: "1px solid #e5e7eb",
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    border: "1px solid var(--card-border)",
                     fontSize: 13,
                     fontFamily: "inherit",
-                    resize: "vertical",
-                    color: "#111827",
+                    background: "#fff",
+                    color: "var(--text-primary)",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                    transition: "border-color 0.15s",
+                    outline: "none",
                   }}
-                />
-              ) : (
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--brand)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "var(--card-border)")}
+                >
+                  <option value="">— בחר לקוח —</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Step 2: Batch size */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      background: "var(--brand)",
+                      color: "#fff",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    2
+                  </span>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+                    כמות קריאייטיבים
+                  </label>
+                </div>
                 <div
                   style={{
-                    fontSize: 12,
-                    color: "#6b7280",
                     background: "#f9fafb",
-                    borderRadius: 6,
-                    padding: "10px 12px",
+                    borderRadius: 8,
+                    padding: "14px 16px",
                     border: "1px solid #f3f4f6",
                   }}
                 >
-                  הטרנסקריפט יילקח אוטומטית מ-Timeless לפי הלקוח שנבחר
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <input
+                      type="range"
+                      min={1}
+                      max={50}
+                      value={batchSize}
+                      onChange={(e) => setBatchSize(Number(e.target.value))}
+                      style={{ flex: 1, accentColor: "var(--brand)", height: 4 }}
+                    />
+                    <span
+                      className="num-display"
+                      style={{
+                        fontSize: 24,
+                        color: "var(--brand)",
+                        minWidth: 36,
+                        textAlign: "center",
+                      }}
+                    >
+                      {batchSize}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: "var(--text-placeholder)" }}>
+                    <span>1</span>
+                    <span>50</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3: Transcript */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      background: "var(--brand)",
+                      color: "#fff",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    3
+                  </span>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+                    מקור טרנסקריפט
+                  </label>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 2,
+                    background: "#f3f4f6",
+                    borderRadius: 10,
+                    padding: 3,
+                    width: "fit-content",
+                    marginBottom: 12,
+                  }}
+                >
+                  {(
+                    [
+                      { key: "auto", label: "אוטומטי מ-Timeless", icon: "⚡" },
+                      { key: "paste", label: "הדבקה ידנית", icon: "📋" },
+                    ] as const
+                  ).map((opt) => {
+                    const isActive = transcriptMode === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        onClick={() => setTranscriptMode(opt.key)}
+                        style={{
+                          fontSize: 12,
+                          padding: "6px 14px",
+                          borderRadius: 8,
+                          border: "none",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          background: isActive ? "#fff" : "transparent",
+                          color: isActive ? "var(--text-primary)" : "var(--text-placeholder)",
+                          boxShadow: isActive ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                          transition: "all 0.15s",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 5,
+                        }}
+                      >
+                        <span style={{ fontSize: 13 }}>{opt.icon}</span>
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {transcriptMode === "paste" ? (
+                  <textarea
+                    value={transcriptText}
+                    onChange={(e) => setTranscriptText(e.target.value)}
+                    placeholder="הדבק את הטרנסקריפט של שיחת האסטרטגיה כאן..."
+                    dir="rtl"
+                    style={{
+                      width: "100%",
+                      minHeight: 140,
+                      padding: "12px 14px",
+                      borderRadius: 8,
+                      border: "1px solid var(--card-border)",
+                      fontSize: 13,
+                      fontFamily: "inherit",
+                      resize: "vertical",
+                      color: "var(--text-primary)",
+                      lineHeight: 1.6,
+                      outline: "none",
+                      transition: "border-color 0.15s",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "var(--brand)")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "var(--card-border)")}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "var(--text-muted)",
+                      background: "#ECFDF5",
+                      borderRadius: 8,
+                      padding: "12px 14px",
+                      border: "1px solid #A7F3D0",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span style={{ color: "#065F46", fontWeight: 500 }}>
+                      הטרנסקריפט יילקח אוטומטית מ-Timeless לפי הלקוח שנבחר
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#991B1B",
+                    background: "#FEF2F2",
+                    border: "1px solid #FECACA",
+                    borderRadius: 8,
+                    padding: "10px 14px",
+                    marginBottom: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round">
+                    <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                  {error}
                 </div>
               )}
-            </div>
 
-            {/* Error */}
-            {error && (
-              <div
+              {/* Submit */}
+              <button
+                onClick={handleSubmit}
+                disabled={submitting || !clientId}
                 style={{
-                  fontSize: 12,
-                  color: "#dc2626",
-                  background: "#fef2f2",
-                  border: "1px solid #fca5a5",
-                  borderRadius: 6,
-                  padding: "8px 12px",
-                  marginBottom: 14,
+                  fontSize: 14,
+                  padding: "11px 24px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: submitting || !clientId ? "#c4b5fd" : "var(--brand)",
+                  color: "#fff",
+                  cursor: submitting || !clientId ? "not-allowed" : "pointer",
+                  fontWeight: 700,
+                  width: "100%",
+                  boxShadow: submitting || !clientId ? "none" : "0 2px 8px rgba(124,58,237,0.25)",
+                  transition: "all 0.2s",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+                onMouseEnter={(e) => {
+                  if (!submitting && clientId) {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(124,58,237,0.35)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = submitting || !clientId ? "none" : "0 2px 8px rgba(124,58,237,0.25)";
                 }}
               >
-                {error}
-              </div>
-            )}
+                {submitting ? (
+                  <>
+                    <span className="pill-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />
+                    יוצר באצ׳...
+                  </>
+                ) : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <path d="M21 15l-5-5L5 21" />
+                    </svg>
+                    צור באצ׳
+                  </>
+                )}
+              </button>
+            </>
+          )}
+        </div>
 
-            {/* Submit */}
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              style={{
-                fontSize: 13,
-                padding: "9px 20px",
-                borderRadius: 6,
-                border: "none",
-                background: submitting ? "#c4b5fd" : "#7C3AED",
-                color: "#fff",
-                cursor: submitting ? "not-allowed" : "pointer",
-                fontWeight: 600,
-                width: "100%",
-              }}
-            >
-              {submitting ? "...יוצר" : "צור באצ׳"}
-            </button>
-          </>
-        )}
+        {/* Summary sidebar */}
+        <div className="kpi-enter kpi-enter-2" style={{ ...CARD, padding: "18px 20px" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", marginBottom: 14 }}>
+            סיכום
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-placeholder)", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 3 }}>
+                לקוח
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: selectedClient ? "var(--text-primary)" : "var(--text-placeholder)" }}>
+                {selectedClient?.name || "לא נבחר"}
+              </div>
+            </div>
+
+            <div style={{ borderTop: "1px solid #f3f4f6", paddingTop: 12 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-placeholder)", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 3 }}>
+                כמות תמונות
+              </div>
+              <div className="num-display" style={{ fontSize: 22, color: "var(--brand)" }}>
+                {batchSize}
+              </div>
+            </div>
+
+            <div style={{ borderTop: "1px solid #f3f4f6", paddingTop: 12 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-placeholder)", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 3 }}>
+                מקור
+              </div>
+              <div style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 500 }}>
+                {transcriptMode === "auto" ? "Timeless (אוטומטי)" : "הדבקה ידנית"}
+              </div>
+            </div>
+
+            <div style={{ borderTop: "1px solid #f3f4f6", paddingTop: 12 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "var(--text-placeholder)", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 3 }}>
+                פורמטים
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                {["1080x1080", "1080x1920", "1200x628", "1080x1350"].map((size) => (
+                  <span
+                    key={size}
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 600,
+                      padding: "2px 6px",
+                      borderRadius: 4,
+                      background: "#f3f4f6",
+                      color: "var(--text-muted)",
+                      fontFamily: "monospace",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    {size}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
