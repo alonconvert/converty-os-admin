@@ -15,16 +15,16 @@ const spendRateMap: Record<string, number> = {
 // ── Color helpers ────────────────────────────────────────────────────────────
 
 const trustColors = {
-  Autonomous: { bg: "#f0fdf4", text: "#16a34a", border: "#bbf7d0" },
-  SemiAuto: { bg: "#fefce8", text: "#ca8a04", border: "#fde68a" },
-  Supervised: { bg: "#fef2f2", text: "#dc2626", border: "#fca5a5" },
+  Autonomous: { bg: "var(--trust-green-bg)", text: "var(--trust-green)", border: "#bbf7d0" },
+  SemiAuto: { bg: "var(--trust-amber-bg)", text: "var(--trust-amber)", border: "#fde68a" },
+  Supervised: { bg: "var(--trust-red-bg)", text: "var(--trust-red)", border: "#fca5a5" },
 };
 
 const healthColors: Record<ChurnTier, { bg: string; text: string; border: string; label: string }> = {
-  green: { bg: "#ecfdf5", text: "#059669", border: "#a7f3d0", label: "Healthy" },
-  yellow: { bg: "#fefce8", text: "#ca8a04", border: "#fde68a", label: "Watch" },
-  orange: { bg: "#fff7ed", text: "#ea580c", border: "#fed7aa", label: "Alert" },
-  red: { bg: "#fff1f2", text: "#be123c", border: "#fecdd3", label: "Critical" },
+  green: { bg: "var(--health-green-bg)", text: "var(--health-green)", border: "#a7f3d0", label: "Healthy" },
+  yellow: { bg: "var(--health-yellow-bg)", text: "var(--health-yellow)", border: "#fde68a", label: "Watch" },
+  orange: { bg: "var(--health-orange-bg)", text: "var(--health-orange)", border: "#fed7aa", label: "Alert" },
+  red: { bg: "var(--health-crimson-bg)", text: "var(--health-crimson)", border: "#fecdd3", label: "Critical" },
 };
 
 // ── Sparkline ────────────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ function HealthDimBar({ label, value, weight }: { label: string; value: number; 
   const color = value >= 70 ? "#059669" : value >= 50 ? "#ca8a04" : value >= 30 ? "#ea580c" : "#be123c";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11 }}>
-      <span style={{ color: "#6b7280", width: 80, flexShrink: 0 }}>{label} <span style={{ color: "#d1d5db" }}>({weight}%)</span></span>
+      <span style={{ color: "#6b7280", width: 80, flexShrink: 0 }}>{label} <span style={{ color: "#9ca3af" }}>({weight}%)</span></span>
       <div style={{ flex: 1, height: 4, background: "#f3f4f6", borderRadius: 99, overflow: "hidden" }}>
         <div style={{ width: `${value}%`, height: "100%", background: color, borderRadius: 99 }} />
       </div>
@@ -127,7 +127,7 @@ function TrustPopover({ client, onClose }: { client: Client; onClose: () => void
     >
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
         <span style={{ fontSize: 11, fontWeight: 700, color: "#111827" }}>Score Breakdown</span>
-        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 14 }}>×</button>
+        <button onClick={onClose} aria-label="סגור פירוט ניקוד" style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 14 }}>×</button>
       </div>
       {items.map((item) => (
         <div key={item.label} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 11 }}>
@@ -195,7 +195,7 @@ function ClientDrawer({ client, onClose }: { client: Client; onClose: () => void
                 {client.domain} · {client.campaigns} campaigns
               </div>
             </div>
-            <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 20 }}>×</button>
+            <button onClick={onClose} aria-label="סגור פאנל לקוח" style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 20 }}>×</button>
           </div>
           <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
             <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, fontWeight: 600, background: tc.bg, color: tc.text }}>
@@ -405,7 +405,7 @@ export default function Clients() {
   };
 
   return (
-    <div style={{ padding: "18px 20px", maxWidth: 1440 }}>
+    <div style={{ padding: "18px 16px", maxWidth: 1440 }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div>
@@ -454,7 +454,7 @@ export default function Clients() {
       </div>
 
       {/* Summary row — click to filter */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+      <div className="responsive-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
         {[
           { label: "Autonomous", count: mockClients.filter((c) => c.level === "Autonomous").length, color: "#16a34a", bg: "#f0fdf4", filterKey: "autonomous" },
           { label: "Semi-Autonomous", count: mockClients.filter((c) => c.level === "SemiAuto").length, color: "#d97706", bg: "#fefce8", filterKey: "semiauto" },
@@ -497,7 +497,16 @@ export default function Clients() {
               <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>{s.label}</div>
             </div>
             <div style={{ width: 32, height: 32, borderRadius: "50%", background: s.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 14 }}>
+              <span
+                role="img"
+                aria-label={
+                  s.label.startsWith("Autonomous") ? "אוטונומי"
+                  : s.label.startsWith("Semi") ? "חצי אוטונומי"
+                  : s.label.startsWith("Super") ? "מפוקח"
+                  : "בסיכון"
+                }
+                style={{ fontSize: 14 }}
+              >
                 {s.label.startsWith("Autonomous") ? "●" : s.label.startsWith("Semi") ? "◐" : s.label.startsWith("Super") ? "○" : "⚠"}
               </span>
             </div>
@@ -593,8 +602,8 @@ export default function Clients() {
       )}
 
       {/* Client table */}
-      <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-        <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+      <div className="responsive-table-wrap" style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+        <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse", minWidth: 900 }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #f3f4f6", background: "#fafafa" }}>
               {/* Checkbox header */}
@@ -718,6 +727,7 @@ export default function Clients() {
                             fontSize: 10, padding: "1px 5px", borderRadius: 99,
                             background: levelTc.bg, color: levelTc.text,
                             border: `1px solid ${levelTc.border}`, cursor: "pointer",
+                            transition: "border-color 0.15s ease",
                           }}
                         >
                           <option value="Supervised">Supervised</option>

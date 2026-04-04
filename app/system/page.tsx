@@ -81,6 +81,7 @@ export default function System() {
   const [logClientFilter, setLogClientFilter] = useState("All Clients");
   const [logTypeFilter, setLogTypeFilter] = useState("All Types");
   const [logSearch, setLogSearch] = useState("");
+  const [hoveredService, setHoveredService] = useState<string | null>(null);
 
   function handleKillConfirm() {
     setKillConfirmOpen(false);
@@ -150,7 +151,7 @@ export default function System() {
   }, [logClientFilter, logTypeFilter, logSearch]);
 
   return (
-    <div style={{ padding: "18px 20px", maxWidth: 1440 }}>
+    <div style={{ padding: "18px 16px", maxWidth: 1440 }}>
 
       {/* Critical services banner */}
       {criticalServices.length > 0 && !bannerDismissed && (
@@ -196,7 +197,7 @@ export default function System() {
         <Link
           href="/system/prompts"
           style={{
-            fontSize: 11, padding: "6px 12px", borderRadius: 6, background: "#f5f3ff", color: "#7c3aed",
+            fontSize: 12, padding: "6px 12px", borderRadius: 6, background: "#f5f3ff", color: "#7c3aed",
             border: "1px solid #e9d5ff", textDecoration: "none", fontWeight: 600,
           }}
         >
@@ -204,7 +205,7 @@ export default function System() {
         </Link>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12, marginBottom: 12 }}>
+      <div className="responsive-grid-2-sidebar" style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12, marginBottom: 12 }}>
         {/* Kill Switch */}
         <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: "16px 18px" }}>
           <h2 style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: "0 0 14px" }}>Global Kill Switch</h2>
@@ -224,7 +225,7 @@ export default function System() {
                   {systemStopped ? "System Stopped" : "System Active"}
                 </span>
               </div>
-              <p style={{ fontSize: 11, color: "#6b7280", marginTop: 2, marginLeft: 15 }}>
+              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 2, marginLeft: 15 }}>
                 {systemStopped ? "All AI agents halted" : "All AI agents running normally"}
               </p>
             </div>
@@ -241,23 +242,23 @@ export default function System() {
           >
             ⛔ Emergency Stop All AI
           </button>
-          <p style={{ fontSize: 10, color: "#9ca3af", marginTop: 6, textAlign: "center" }}>
+          <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 6, textAlign: "center" }}>
             Telegram: /kill or /resume
           </p>
 
           {/* Canary deployment */}
           {canaryDeployment.active && (
             <div style={{ marginTop: 14, background: "#faf5ff", border: "1px solid #e9d5ff", borderRadius: 8, padding: "10px 12px" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed", marginBottom: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#7c3aed", marginBottom: 6 }}>
                 ⚗ Canary {canaryDeployment.version} — {canaryDeployment.hoursRemaining}h remaining
               </div>
-              <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 6 }}>
+              <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>
                 {canaryDeployment.clients.length} clients in canary group
               </div>
               {canaryMetrics.map((m) => {
                 const better = m.higherIsBetter ? m.val >= m.base : m.val <= m.base;
                 return (
-                  <div key={m.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, padding: "2px 0" }}>
+                  <div key={m.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "2px 0" }}>
                     <span style={{ color: "#6b7280" }}>{m.label}</span>
                     <span style={{ fontWeight: 700, color: better ? "#059669" : "#dc2626" }}>
                       {m.val}% <span style={{ color: "#9ca3af", fontWeight: 400 }}>(baseline {m.base}%)</span>
@@ -276,7 +277,7 @@ export default function System() {
                   border: `1px solid ${canaryGo ? "#bbf7d0" : "#fca5a5"}`,
                 }}
               >
-                <div style={{ fontSize: 11, fontWeight: 700, color: canaryGo ? "#059669" : "#dc2626", marginBottom: 4 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: canaryGo ? "#059669" : "#dc2626", marginBottom: 4 }}>
                   {canaryGo
                     ? "GO: All metrics within threshold. Ready to promote."
                     : `NO-GO: ${degradedMetrics.map((m) => m.label).join(", ")} degraded.`}
@@ -286,7 +287,7 @@ export default function System() {
                     onClick={() => handleCanaryAction("promote")}
                     style={{
                       flex: 1,
-                      fontSize: 10,
+                      fontSize: 12,
                       padding: "5px 4px",
                       background: "#059669",
                       color: "#fff",
@@ -302,7 +303,7 @@ export default function System() {
                     onClick={() => handleCanaryAction("rollback")}
                     style={{
                       flex: 1,
-                      fontSize: 10,
+                      fontSize: 12,
                       padding: "5px 4px",
                       background: "#fff",
                       color: "#dc2626",
@@ -320,7 +321,7 @@ export default function System() {
                 <div
                   style={{
                     marginTop: 8,
-                    fontSize: 11,
+                    fontSize: 12,
                     color: "#059669",
                     background: "#f0fdf4",
                     border: "1px solid #bbf7d0",
@@ -340,15 +341,21 @@ export default function System() {
         {/* Service health */}
         <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: "16px 18px" }}>
           <h2 style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: "0 0 12px" }}>Service Health</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <div className="responsive-grid-4" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             {services.map((svc) => (
               <div
                 key={svc.name}
+                onMouseEnter={() => setHoveredService(svc.name)}
+                onMouseLeave={() => setHoveredService(null)}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "9px 12px", background: "#f9fafb", borderRadius: 7,
+                  padding: "9px 12px",
+                  background: hoveredService === svc.name ? "#F5F3FF" : "#f9fafb",
+                  borderRadius: 7,
                   border: `1px solid ${svc.status === "degraded" ? "#fde68a" : svc.status === "unconfigured" ? "#fca5a5" : svc.status === "offline" ? "#f87171" : "transparent"}`,
                   opacity: svc.status === "parked" ? 0.55 : 1,
+                  transition: "background 0.15s ease",
+                  cursor: "default",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
@@ -362,15 +369,15 @@ export default function System() {
                       : "#d1d5db",
                   }} />
                   <div>
-                    <div style={{ fontSize: 11, fontWeight: 500, color: svc.status === "parked" ? "#9ca3af" : "#374151" }}>{svc.name}</div>
-                    <div style={{ fontSize: 9, color: "#9ca3af", marginTop: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: svc.status === "parked" ? "#9ca3af" : "#374151" }}>{svc.name}</div>
+                    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 1 }}>
                       {svc.status === "parked" ? "Parked — Phase 2" : serviceImpacts[svc.name]}
                     </div>
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 11, color: "#6b7280" }}>{svc.latency}</div>
-                  <div style={{ fontSize: 10, color: "#9ca3af" }}>{svc.uptime}</div>
+                  <div style={{ fontSize: 12, color: "#6b7280" }}>{svc.latency}</div>
+                  <div style={{ fontSize: 12, color: "#9ca3af" }}>{svc.uptime}</div>
                 </div>
               </div>
             ))}
@@ -382,9 +389,9 @@ export default function System() {
       <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden", marginBottom: 12 }}>
         <div style={{ padding: "10px 14px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h2 style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: 0 }}>Nightly Optimization Loop</h2>
-          <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 3, background: "#f0fdf4", color: "#16a34a", fontWeight: 700 }}>✓ COMPLETED</span>
+          <span style={{ fontSize: 12, padding: "2px 7px", borderRadius: 3, background: "#f0fdf4", color: "#16a34a", fontWeight: 700 }}>✓ COMPLETED</span>
         </div>
-        <div style={{ padding: "12px 14px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+        <div className="responsive-grid-4" style={{ padding: "12px 14px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
           {[
             { label: "Last Run", value: "03:00 IST", sub: "Apr 1, 2026" },
             { label: "Next Run", value: "03:00 IST", sub: "Apr 2, 2026" },
@@ -392,14 +399,14 @@ export default function System() {
             { label: "Actions Taken", value: "3", sub: "1 bid · 2 keywords" },
           ].map((s) => (
             <div key={s.label} style={{ background: "#f9fafb", borderRadius: 7, padding: "10px 12px" }}>
-              <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 3 }}>{s.label}</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "#111827", fontFamily: "'DM Serif Display', serif" }}>{s.value}</div>
-              <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>{s.sub}</div>
+              <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 3 }}>{s.label}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{s.value}</div>
+              <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{s.sub}</div>
             </div>
           ))}
         </div>
         <div style={{ padding: "0 14px 12px", borderTop: "1px solid #f9fafb" }}>
-          <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 600, marginBottom: 6, marginTop: 8 }}>LAST LOOP ACTIONS</div>
+          <div style={{ fontSize: 12, color: "#9ca3af", fontWeight: 600, marginBottom: 6, marginTop: 8 }}>LAST LOOP ACTIONS</div>
           {loopActions.map((a) => {
             const isApproved = approvedLoopActions.includes(a.id);
             const isRejected = rejectedLoopActions.includes(a.id);
@@ -407,7 +414,7 @@ export default function System() {
               <div
                 key={a.id}
                 style={{
-                  fontSize: 11,
+                  fontSize: 12,
                   color: "#374151",
                   padding: "6px 0",
                   display: "flex",
@@ -436,7 +443,7 @@ export default function System() {
                     <button
                       onClick={() => setApprovedLoopActions((prev) => [...prev, a.id])}
                       style={{
-                        fontSize: 10,
+                        fontSize: 12,
                         padding: "3px 8px",
                         background: "#f0fdf4",
                         color: "#059669",
@@ -451,7 +458,7 @@ export default function System() {
                     <button
                       onClick={() => setRejectedLoopActions((prev) => [...prev, a.id])}
                       style={{
-                        fontSize: 10,
+                        fontSize: 12,
                         padding: "3px 8px",
                         background: "#fef2f2",
                         color: "#dc2626",
@@ -466,10 +473,10 @@ export default function System() {
                   </div>
                 )}
                 {a.pending && isApproved && (
-                  <span style={{ fontSize: 10, color: "#059669", fontWeight: 700, flexShrink: 0 }}>✓ Approved</span>
+                  <span style={{ fontSize: 12, color: "#059669", fontWeight: 700, flexShrink: 0 }}>✓ Approved</span>
                 )}
                 {a.pending && isRejected && (
-                  <span style={{ fontSize: 10, color: "#dc2626", fontWeight: 700, flexShrink: 0 }}>✕ Rejected</span>
+                  <span style={{ fontSize: 12, color: "#dc2626", fontWeight: 700, flexShrink: 0 }}>✕ Rejected</span>
                 )}
                 {!a.pending && (
                   <span
@@ -496,9 +503,9 @@ export default function System() {
       <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden", marginBottom: 12 }}>
         <div style={{ padding: "10px 14px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between" }}>
           <h2 style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: 0 }}>Trust Engine — All Clients</h2>
-          <span style={{ fontSize: 11, color: "#9ca3af" }}>Click a client for full breakdown</span>
+          <span style={{ fontSize: 12, color: "#9ca3af" }}>Click a client for full breakdown</span>
         </div>
-        <div style={{ padding: "12px 14px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+        <div className="responsive-grid-4" style={{ padding: "12px 14px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
           {[
             { name: 'מרפאת שיניים לוי', score: 82, level: 'Autonomous', health: 78, healthTier: 'green' },
             { name: 'גרינברג נדל"ן', score: 44, level: 'SemiAuto', health: 65, healthTier: 'yellow' },
@@ -513,21 +520,21 @@ export default function System() {
             const healthColor = c.healthTier === "green" ? "#059669" : c.healthTier === "yellow" ? "#ca8a04" : c.healthTier === "orange" ? "#ea580c" : "#be123c";
             return (
               <div key={c.name} style={{ border: "1px solid #f3f4f6", borderRadius: 8, padding: "10px 12px" }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 6 }}>{c.name}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6 }}>{c.name}</div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 9, color: "#9ca3af", marginBottom: 2 }}>Trust</div>
+                    <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 2 }}>Trust</div>
                     <div style={{ height: 3, background: "#f3f4f6", borderRadius: 99, overflow: "hidden", marginBottom: 2 }}>
                       <div style={{ width: `${c.score}%`, height: "100%", background: trustColor, borderRadius: 99 }} />
                     </div>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: trustColor }}>{c.score}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: trustColor }}>{c.score}</span>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 9, color: "#9ca3af", marginBottom: 2 }}>Health</div>
+                    <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 2 }}>Health</div>
                     <div style={{ height: 3, background: "#f3f4f6", borderRadius: 99, overflow: "hidden", marginBottom: 2 }}>
                       <div style={{ width: `${c.health}%`, height: "100%", background: healthColor, borderRadius: 99 }} />
                     </div>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: healthColor }}>{c.health}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: healthColor }}>{c.health}</span>
                   </div>
                 </div>
               </div>
@@ -540,7 +547,7 @@ export default function System() {
       <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
         <div style={{ padding: "10px 14px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between" }}>
           <h2 style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: 0 }}>Agent Log</h2>
-          <span style={{ fontSize: 11, color: "#9ca3af" }}>Last sync: {systemStats.lastSync}</span>
+          <span style={{ fontSize: 12, color: "#9ca3af" }}>Last sync: {systemStats.lastSync}</span>
         </div>
 
         {/* Filter bar */}
@@ -558,7 +565,7 @@ export default function System() {
             value={logClientFilter}
             onChange={(e) => setLogClientFilter(e.target.value)}
             style={{
-              fontSize: 11,
+              fontSize: 12,
               padding: "4px 8px",
               borderRadius: 6,
               border: "1px solid #e5e7eb",
@@ -575,7 +582,7 @@ export default function System() {
             value={logTypeFilter}
             onChange={(e) => setLogTypeFilter(e.target.value)}
             style={{
-              fontSize: 11,
+              fontSize: 12,
               padding: "4px 8px",
               borderRadius: 6,
               border: "1px solid #e5e7eb",
@@ -594,7 +601,7 @@ export default function System() {
             onChange={(e) => setLogSearch(e.target.value)}
             placeholder="Search logs…"
             style={{
-              fontSize: 11,
+              fontSize: 12,
               padding: "4px 10px",
               borderRadius: 6,
               border: "1px solid #e5e7eb",
@@ -609,7 +616,7 @@ export default function System() {
             <button
               onClick={() => { setLogClientFilter("All Clients"); setLogTypeFilter("All Types"); setLogSearch(""); }}
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 padding: "4px 8px",
                 borderRadius: 5,
                 border: "1px solid #e5e7eb",
@@ -644,8 +651,8 @@ export default function System() {
               </span>
               <p style={{ fontSize: 12, color: "#374151", flex: 1, margin: 0 }}>{log.message}</p>
               <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1 }}>
-                <span style={{ fontSize: 10, color: "#9ca3af" }}>{log.time}</span>
-                {log.cost && <span style={{ fontSize: 10, color: "#7c3aed" }}>{log.cost}</span>}
+                <span style={{ fontSize: 12, color: "#9ca3af" }}>{log.time}</span>
+                {log.cost && <span style={{ fontSize: 12, color: "#7c3aed" }}>{log.cost}</span>}
               </div>
             </div>
           );
@@ -681,7 +688,7 @@ export default function System() {
               This will immediately halt all AI agents for all clients. Type <strong>STOP</strong> to confirm.
             </p>
             <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 11, color: "#374151", fontWeight: 600, display: "block", marginBottom: 4 }}>
+              <label style={{ fontSize: 12, color: "#374151", fontWeight: 600, display: "block", marginBottom: 4 }}>
                 Confirmation
               </label>
               <input
@@ -701,7 +708,7 @@ export default function System() {
               />
             </div>
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 11, color: "#374151", fontWeight: 600, display: "block", marginBottom: 4 }}>
+              <label style={{ fontSize: 12, color: "#374151", fontWeight: 600, display: "block", marginBottom: 4 }}>
                 Reason
               </label>
               <select

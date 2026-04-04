@@ -55,20 +55,48 @@ Persistent dark strip (`#0f1117`) at top of every page. Renders:
 ## Pages
 
 ### `/` — Dashboard (`app/page.tsx`)
-**Purpose:** Morning command center. Surface only what needs the operator's eye.
+**Purpose:** Morning action cockpit. Show what needs the operator's attention, let him act, let him leave. Single-column layout (max-width 900px).
+
+**Design principle:** Per PRD — "One dashboard. The operator's only job is to review exceptions, approve flagged outputs, and make strategic decisions. The system surfaces only what requires human judgment."
 
 **Components rendered:**
 - `MorningBriefing` (modal, IST 09:00–13:00 window only) — overnight summary, exception clients, auto-approval countdown
-- `ApprovalQueue` — pending conversations with confidence bars, countdown timers, approve/edit/reject
+- `ApprovalQueue` (x2) — split into crisis and routine variants
 
-**Sections:**
-1. **KPI row (8 cards):** Active Clients (of 37 · target 120), Leads Today, Pending Queue, Auto-Approved, Monthly Spend, At-Risk Clients, Supervised Slots, Agency Health
-2. **Approval Queue** — left column, live countdown timers, Hebrew message previews, trust delta on approve
-3. **Overnight Summary** — 4 counters (leads, auto-approved, trust changes, campaign actions)
-4. **Portfolio Heatmap** — 37 color-coded dots (green/amber/red by trust, sized by budget), shows 37/120 target
-5. **Churn Risk quadrant** — 2×2 grid: Green/Yellow/Orange/Red counts
-6. **Recent Leads** — last 5, source badge + status badge
-7. **Agent Log** — last 6 system events with AI cost per entry
+**5-Zone Layout:**
+
+1. **Zone 1 — Briefing Bar** (compact card, always visible)
+   - Left: page title + live data indicator (green dot)
+   - Right: 4 inline stats — Leads Today, Pending Approvals, CPL, Monthly Spend
+   - Bottom line: overnight summary (leads, auto-approved, trust changes) + auto-send warning pill when messages are queued
+
+2. **Zone 2 — "דורש טיפול עכשיו" (Needs You Now)** — crisis items only
+   - Red border + red header background
+   - Only shows T4/T3 conversations or `status: needs_human`
+   - Hidden entirely when no crises exist
+   - Uses `ApprovalQueue` with `variant="crisis"`
+
+3. **Zone 3 — "אישורים מהירים" (Quick Approvals)** — routine T1/T2 items
+   - Standard card styling
+   - "Approve All" batch button in header
+   - Uses `ApprovalQueue` with `variant="routine"` + `showBatchApprove`
+   - Empty state shown when both zones 2+3 are empty
+
+4. **Zone 4 — "לקוחות בסיכון" (At-Risk Clients)** — actionable list
+   - Orange header background
+   - Each row: colored dot + client name + tier badge + trust/health scores + renewal warning
+   - Left border colored by tier (red/orange)
+   - Action button per row: "התקשר עכשיו" (red) / "בדוק היום" (orange) → links to `/clients`
+
+5. **Zone 5 — "יומן פעילות" (Activity Feed)** — collapsed by default
+   - Single line when collapsed: title + daily AI cost (₪X.XX)
+   - Click to expand full agent log (8 entries) with type badges + timestamps + cost
+
+**Moved to other pages:**
+- KPI cards (8) → key stats condensed into Zone 1 briefing bar; system metrics (Canary, Agency Health %, Supervised Slots) live on `/system`
+- Portfolio Heatmap → `/clients`
+- Churn Risk quadrant → `/clients/health`
+- Recent Leads widget → `/conversations`
 
 ---
 
@@ -231,6 +259,9 @@ Persistent dark strip (`#0f1117`) at top of every page. Renders:
 ## Key Components
 
 ### `components/ApprovalQueue.tsx`
+- **Props:** `conversations`, `title?` (default "Approval Queue"), `variant?: "crisis" | "routine"`, `showBatchApprove?`
+- **Crisis variant:** red border, red header bg, red count badge — for T4/T3/human-takeover items
+- **Routine variant:** standard styling + optional "Approve All" batch button in header
 - Countdown timer: live MM:SS from `minutesRemaining` prop via `setInterval`
 - ConfidenceBar: green ≥85%, amber ≥70%, red below
 - Keyboard shortcuts: A=approve, E=edit, R=reject (first item, `useEffect` keydown)
@@ -238,6 +269,7 @@ Persistent dark strip (`#0f1117`) at top of every page. Renders:
 - Trust delta preview: "+2 trust on approve" per card
 - Reject confirmation: 4 chips including "Factual error", sends to training queue
 - All Clear flow → Hebrew AI re-entry ACK
+- Batch approve: triggers flash + dismiss for all items with drafts (excludes `needs_human`)
 
 ### `components/MorningBriefing.tsx`
 - Shows automatically IST 09:00–13:00 (`Intl.DateTimeFormat`, `timeZone: "Asia/Jerusalem"`)

@@ -92,19 +92,22 @@ function ConfidenceBar({ conf }: { conf: number }) {
   const color = confidenceColor(conf);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-      <div style={{ width: 40, height: 3, background: "#f3f4f6", borderRadius: 99, overflow: "hidden" }}>
-        <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 99 }} />
+      <div style={{ width: 48, height: 5, background: "#e5e7eb", borderRadius: 99, overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 99, transition: "width 0.3s ease" }} />
       </div>
-      <span style={{ fontSize: 10, color, fontWeight: 700 }}>{pct}%</span>
+      <span style={{ fontSize: 11, color, fontWeight: 700, minWidth: 28 }}>{pct}%</span>
     </div>
   );
 }
 
 interface Props {
   conversations: Conversation[];
+  title?: string;
+  variant?: "crisis" | "routine";
+  showBatchApprove?: boolean;
 }
 
-export default function ApprovalQueue({ conversations }: Props) {
+export default function ApprovalQueue({ conversations, title = "Approval Queue", variant, showBatchApprove }: Props) {
   const [dismissed, setDismissed] = useState<string[]>([]);
   const [flash, setFlash] = useState<FlashState | null>(null);
   const [editing, setEditing] = useState<EditState | null>(null);
@@ -172,31 +175,43 @@ export default function ApprovalQueue({ conversations }: Props) {
     setClearedHuman((prev) => [...prev, conv.id]);
   }
 
+  const isCrisis = variant === "crisis";
+  const isRoutine = variant === "routine";
+
+  function handleBatchApprove() {
+    const approvable = pendingConvs.filter((c) => c.draft && c.status !== "needs_human");
+    approvable.forEach((conv) => {
+      triggerFlash(conv.id, `✓ Sent to ${conv.leadName} (+${conv.trustDeltaOnApprove} trust)`);
+    });
+  }
+
   return (
     <div
       style={{
         background: "#fff",
         borderRadius: 10,
-        border: "1px solid #e5e7eb",
+        border: isCrisis ? "1px solid rgba(239,68,68,0.35)" : "1px solid #e5e7eb",
         overflow: "hidden",
+        boxShadow: isCrisis ? "0 0 0 3px rgba(239,68,68,0.06)" : undefined,
       }}
     >
       {/* Header */}
       <div
         style={{
           padding: "10px 14px",
-          borderBottom: "1px solid #f3f4f6",
+          borderBottom: isCrisis ? "1px solid rgba(239,68,68,0.15)" : "1px solid #f3f4f6",
+          background: isCrisis ? "#FEF2F2" : undefined,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <h2 style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: 0 }}>Approval Queue</h2>
+          <h2 style={{ fontSize: 13, fontWeight: 600, color: isCrisis ? "#991B1B" : "#111827", margin: 0 }}>{title}</h2>
           {pendingConvs.length > 0 && (
             <span
               style={{
-                background: "#4F46E5",
+                background: isCrisis ? "#DC2626" : "#4F46E5",
                 color: "#fff",
                 fontSize: 10,
                 fontWeight: 700,
@@ -207,7 +222,7 @@ export default function ApprovalQueue({ conversations }: Props) {
               {pendingConvs.length}
             </span>
           )}
-          {pendingConvs.length > 0 && (() => {
+          {!isCrisis && pendingConvs.length > 0 && (() => {
             const oldest = Math.max(...pendingConvs.map((c) => c.ageMinutes ?? 0));
             const h = Math.floor(oldest / 60);
             const m = oldest % 60;
@@ -229,9 +244,29 @@ export default function ApprovalQueue({ conversations }: Props) {
             );
           })()}
         </div>
-        <span style={{ fontSize: 11, color: "#9ca3af" }}>
-          A=approve · E=edit · R=reject (first item)
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {showBatchApprove && pendingConvs.filter((c) => c.draft).length > 1 && (
+            <button
+              onClick={handleBatchApprove}
+              style={{
+                fontSize: 11,
+                padding: "4px 12px",
+                background: "#dcfce7",
+                color: "#16a34a",
+                border: "1px solid #bbf7d0",
+                borderRadius: 6,
+                cursor: "pointer",
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+              }}
+            >
+              ✓ Approve All
+            </button>
+          )}
+          <span style={{ fontSize: 11, color: "#9ca3af" }}>
+            A=approve · E=edit · R=reject
+          </span>
+        </div>
       </div>
 
       <div>
@@ -298,7 +333,7 @@ export default function ApprovalQueue({ conversations }: Props) {
                     <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{conv.clientName}</span>
                     <span style={{ fontSize: 12, color: "#9ca3af" }}>→</span>
                     <span style={{ fontSize: 12, color: "#6b7280" }}>{conv.leadName}</span>
-                    <span style={{ fontSize: 11, color: "#d1d5db" }}>{conv.phone}</span>
+                    <span style={{ fontSize: 11, color: "#6b7280" }}>{conv.phone}</span>
                     <span
                       style={{
                         fontSize: 10,
@@ -315,7 +350,17 @@ export default function ApprovalQueue({ conversations }: Props) {
                         fontWeight: 600,
                       }}
                     >
-                      {conv.sentiment === "angry" ? "😠" : conv.sentiment === "positive" ? "😊" : "😐"} {conv.sentiment}
+                      <span
+                        role="img"
+                        aria-label={
+                          conv.sentiment === "angry" ? "סנטימנט שלילי"
+                          : conv.sentiment === "positive" ? "סנטימנט חיובי"
+                          : "סנטימנט ניטרלי"
+                        }
+                      >
+                        {conv.sentiment === "angry" ? "😠" : conv.sentiment === "positive" ? "😊" : "😐"}
+                      </span>{" "}
+                      {conv.sentiment}
                     </span>
                   </div>
 
@@ -561,31 +606,43 @@ export default function ApprovalQueue({ conversations }: Props) {
                     <div style={{ display: "flex", gap: 4, marginTop: 2 }}>
                       <button
                         onClick={() => handleApprove(conv)}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#dcfce7"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#dcfce7"; }}
                         style={{
                           fontSize: 11, padding: "4px 7px", background: "#dcfce7", color: "#16a34a",
                           border: "none", borderRadius: 5, cursor: "pointer", fontWeight: 700,
+                          transition: "background 0.15s, color 0.15s",
                         }}
                         title="Approve (A)"
+                        aria-label="אשר הודעה"
                       >
                         ✓
                       </button>
                       <button
                         onClick={() => handleEditClick(conv)}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#F5F3FF"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6"; }}
                         style={{
                           fontSize: 11, padding: "4px 7px", background: "#f3f4f6", color: "#4b5563",
                           border: "none", borderRadius: 5, cursor: "pointer",
+                          transition: "background 0.15s, color 0.15s",
                         }}
                         title="Edit (E)"
+                        aria-label="ערוך הודעה"
                       >
                         ✏
                       </button>
                       <button
                         onClick={() => handleRejectClick(conv)}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#fee2e2"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#fef2f2"; }}
                         style={{
                           fontSize: 11, padding: "4px 7px", background: "#fef2f2", color: "#dc2626",
                           border: "none", borderRadius: 5, cursor: "pointer",
+                          transition: "background 0.15s, color 0.15s",
                         }}
                         title="Reject (R)"
+                        aria-label="דחה הודעה"
                       >
                         ✗
                       </button>

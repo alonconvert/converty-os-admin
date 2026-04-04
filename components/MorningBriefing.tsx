@@ -88,24 +88,7 @@ function BriefingTriggerButton({ onClick }: BriefingButtonProps) {
   return (
     <button
       onClick={onClick}
-      style={{
-        position: "fixed",
-        bottom: 20,
-        right: 20,
-        background: "#4F46E5",
-        color: "#fff",
-        border: "none",
-        borderRadius: 99,
-        padding: "8px 14px",
-        fontSize: 12,
-        fontWeight: 600,
-        cursor: "pointer",
-        boxShadow: "0 4px 12px rgba(79,70,229,0.4)",
-        zIndex: 1000,
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-      }}
+      className="fixed bottom-5 right-5 bg-[var(--brand)] text-white border-none rounded-full px-3.5 py-2 text-xs font-semibold cursor-pointer shadow-lg hover:shadow-xl transition-shadow z-[1000] flex items-center gap-1.5"
     >
       <span>📋</span> Today&apos;s Brief
     </button>
@@ -154,96 +137,51 @@ export default function MorningBriefing() {
       {open && (
         <div
           onClick={close}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.65)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "flex-end",
-            padding: "20px",
-            paddingTop: 56, // below status bar
-          }}
+          className="fixed inset-0 bg-black/65 z-[9999] flex items-start justify-end p-5 pt-14"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "#ffffff",
-              borderRadius: 14,
-              width: 420,
-              maxHeight: "calc(100vh - 80px)",
-              overflowY: "auto",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.22)",
-            }}
+            className="bg-white rounded-[14px] w-[420px] max-h-[calc(100vh-80px)] overflow-y-auto shadow-2xl"
           >
             {/* Header */}
-            <div
-              style={{
-                padding: "20px 24px 16px",
-                borderBottom: "1px solid #f3f4f6",
-                position: "sticky",
-                top: 0,
-                background: "#fff",
-                zIndex: 1,
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div className="p-5 pb-4 border-b border-gray-100 sticky top-0 bg-white z-[1] rounded-t-[14px]">
+              <div className="flex justify-between items-start">
                 <div>
-                  <h2 style={{ fontSize: 20, fontWeight: 700, color: "#111827", margin: 0 }}>
+                  <h2 className="text-xl font-bold text-[var(--text-primary)] m-0">
                     ☀️ Good morning, אלון
                   </h2>
-                  <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+                  <p className="text-xs text-gray-500 mt-1">
                     {formatHebrewDate()}
                   </p>
                 </div>
                 <button
                   onClick={close}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#9ca3af",
-                    cursor: "pointer",
-                    fontSize: 18,
-                    lineHeight: 1,
-                    padding: "2px 6px",
-                  }}
+                  aria-label="סגור"
+                  className="bg-transparent border-none text-gray-400 hover:text-gray-600 cursor-pointer text-lg leading-none p-0 min-w-[40px] min-h-[40px] flex items-center justify-center transition-colors"
                 >
                   ×
                 </button>
               </div>
 
               {/* Agency health summary */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: 8,
-                  marginTop: 14,
-                }}
-              >
+              <div className="grid grid-cols-3 gap-2 mt-3.5">
                 {[
                   { label: "Overnight leads", value: overnightSummary.leadsReceived, color: "#059669" },
-                  { label: "Auto-approved", value: overnightSummary.messagesAutoApproved, color: "#4F46E5" },
+                  { label: "Auto-approved", value: overnightSummary.messagesAutoApproved, color: "#7C3AED" },
                   { label: "Supervised slots", value: supervisedUsage, color: systemStats.supervisedClients >= 10 ? "#dc2626" : "#d97706" },
                 ].map((s) => (
                   <div
                     key={s.label}
-                    style={{
-                      background: "#f9fafb",
-                      borderRadius: 8,
-                      padding: "8px 10px",
-                      textAlign: "center",
-                    }}
+                    className="bg-[#f9fafb] rounded-lg px-2.5 py-2 text-center"
                   >
                     <div
-                      className="num-display"
+                      className="num-display text-xl font-bold"
                       dir="ltr"
-                      style={{ fontSize: 20, fontWeight: 700, color: s.color }}
+                      style={{ color: s.color }}
                     >
                       {s.value}
                     </div>
-                    <div style={{ fontSize: 10, color: "#6b7280", marginTop: 2 }}>{s.label}</div>
+                    <div className="text-xs text-gray-600 mt-0.5">{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -251,24 +189,13 @@ export default function MorningBriefing() {
 
             {/* Auto-approval alert */}
             {autoSendCount > 0 && (
-              <div
-                style={{
-                  margin: "12px 16px 0",
-                  background: "#fffbeb",
-                  border: "1px solid #fde68a",
-                  borderRadius: 8,
-                  padding: "10px 12px",
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "flex-start",
-                }}
-              >
-                <span style={{ fontSize: 16, lineHeight: 1 }}>⏱</span>
+              <div className="mx-4 mt-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 flex gap-2 items-start">
+                <span className="text-base leading-none">⏱</span>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#92400e" }}>
+                  <div className="text-xs font-semibold text-amber-800">
                     {autoSendCount} message{autoSendCount > 1 ? "s" : ""} auto-sending in &lt;{autoSendMinutes} min
                   </div>
-                  <div style={{ fontSize: 11, color: "#a16207", marginTop: 2 }}>
+                  <div className="text-xs text-amber-700 mt-0.5">
                     Intervene now if needed — go to Conversations
                   </div>
                 </div>
@@ -276,82 +203,42 @@ export default function MorningBriefing() {
             )}
 
             {/* Exception clients */}
-            <div style={{ padding: "12px 16px" }}>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#6b7280",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                  marginBottom: 8,
-                }}
-              >
+            <div className="p-4">
+              <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">
                 {exceptionClients.length} clients need attention today
               </div>
 
               {exceptionClients.length === 0 ? (
-                <div
-                  style={{
-                    background: "#f0fdf4",
-                    border: "1px solid #bbf7d0",
-                    borderRadius: 8,
-                    padding: "12px",
-                    fontSize: 13,
-                    color: "#16a34a",
-                    fontWeight: 600,
-                    textAlign: "center",
-                  }}
-                >
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-600 font-semibold text-center">
                   ✅ All clients healthy — no exceptions today
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div className="flex flex-col gap-2">
                   {exceptionClients.map(({ client, reasons, action }) => (
                     <div
                       key={client.id}
+                      className="bg-[#f9fafb] border border-gray-200 rounded-lg px-3 py-2.5 flex items-center justify-between gap-2.5 hover:bg-[#F5F3FF] transition-colors"
                       style={{
-                        background: "#fafafa",
-                        border: "1px solid #e5e7eb",
-                        borderLeft: `3px solid ${
+                        borderLeftWidth: 3,
+                        borderLeftColor:
                           client.churnTier === "red" ? "#be123c"
                           : client.churnTier === "orange" ? "#ea580c"
-                          : "#d97706"
-                        }`,
-                        borderRadius: 8,
-                        padding: "10px 12px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 10,
+                          : "#d97706",
                       }}
                     >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-gray-900">
                           {client.name}
                         </div>
-                        <div style={{ marginTop: 3 }}>
+                        <div className="mt-0.5">
                           {reasons.map((r) => (
-                            <div key={r} style={{ fontSize: 11, color: "#6b7280" }}>
+                            <div key={r} className="text-xs text-gray-600">
                               {r}
                             </div>
                           ))}
                         </div>
                       </div>
-                      <button
-                        style={{
-                          fontSize: 10,
-                          padding: "4px 9px",
-                          background: "#fff",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: 6,
-                          cursor: "pointer",
-                          color: "#374151",
-                          fontWeight: 600,
-                          whiteSpace: "nowrap",
-                          flexShrink: 0,
-                        }}
-                      >
+                      <button className="text-xs px-2.5 py-1 bg-white border border-gray-200 rounded-md cursor-pointer text-gray-700 font-semibold whitespace-nowrap shrink-0 hover:bg-[#F5F3FF] hover:border-[var(--brand)] hover:text-[var(--brand)] transition-colors">
                         {action}
                       </button>
                     </div>
@@ -362,32 +249,16 @@ export default function MorningBriefing() {
 
             {/* Overnight highlights */}
             {overnightSummary.highlights.length > 0 && (
-              <div style={{ padding: "0 16px 12px" }}>
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: "#6b7280",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    marginBottom: 8,
-                  }}
-                >
+              <div className="px-4 pb-3">
+                <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">
                   Overnight activity
                 </div>
                 {overnightSummary.highlights.map((h, i) => (
                   <div
                     key={i}
-                    style={{
-                      fontSize: 11,
-                      color: "#6b7280",
-                      padding: "5px 0",
-                      borderTop: "1px solid #f3f4f6",
-                      display: "flex",
-                      gap: 6,
-                    }}
+                    className="text-xs text-gray-600 py-1.5 border-t border-gray-100 flex gap-1.5"
                   >
-                    <span style={{ color: "#d1d5db" }}>›</span>
+                    <span className="text-gray-400">›</span>
                     {h}
                   </div>
                 ))}
@@ -395,20 +266,10 @@ export default function MorningBriefing() {
             )}
 
             {/* CTA */}
-            <div style={{ padding: "12px 16px 16px" }}>
+            <div className="px-4 pt-3 pb-4">
               <button
                 onClick={close}
-                style={{
-                  width: "100%",
-                  padding: "11px",
-                  background: "#4F46E5",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 9,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
+                className="w-full py-2.5 bg-[var(--brand)] text-white border-none rounded-[9px] text-sm font-semibold cursor-pointer hover:bg-[#6D28D9] transition-colors shadow-md"
               >
                 Start working →
               </button>

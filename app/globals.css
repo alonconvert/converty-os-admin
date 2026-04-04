@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,opsz,wght@0,6..30,300;0,6..30,400;0,6..30,500;0,6..30,600;0,6..30,700;0,6..30,800;1,6..30,400&family=Heebo:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -60,9 +60,20 @@
 body {
   background: var(--page-bg);
   color: var(--text-primary);
-  font-family: 'Heebo', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Noto Sans Hebrew', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   margin: 0;
+}
+
+/* Subtle grain texture — shared with Pulse */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
 }
 
 /* RTL message bubbles */
@@ -77,11 +88,9 @@ body {
   text-align: left;
 }
 
-/* Numbers only — Plus Jakarta Sans */
-
-/* Display numbers */
+/* Display numbers — same font as UI, just heavier */
 .num-display {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Noto Sans Hebrew', sans-serif;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -137,11 +146,82 @@ body {
 .sparkline-path { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ── Table hover ── */
-tr.hoverable:hover { background: #F9FAFB; cursor: pointer; }
+tr.hoverable:hover { background: #F5F3FF; cursor: pointer; }
 
 /* ── Focus ring ── */
-button:focus-visible, a:focus-visible {
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* ── Count-up entrance for KPI numbers ── */
+@keyframes adminCountUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.kpi-enter {
+  animation: adminCountUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.kpi-enter-1 { animation-delay: 0ms; }
+.kpi-enter-2 { animation-delay: 60ms; }
+.kpi-enter-3 { animation-delay: 120ms; }
+.kpi-enter-4 { animation-delay: 180ms; }
+.kpi-enter-5 { animation-delay: 240ms; }
+.kpi-enter-6 { animation-delay: 300ms; }
+.kpi-enter-7 { animation-delay: 360ms; }
+.kpi-enter-8 { animation-delay: 420ms; }
+
+/* ── Skeleton shimmer ── */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Responsive utility classes ── */
+@media (max-width: 767px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
+  .mobile-only-flex { display: flex !important; }
+}
+@media (min-width: 768px) {
+  .desktop-only { display: block !important; }
+  .desktop-only-flex { display: flex !important; }
+  .mobile-only { display: none !important; }
+  .mobile-only-flex { display: none !important; }
+}
+
+/* ── Mobile sidebar overlay ── */
+@keyframes sidebarSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes sidebarSlideOut {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sidebar-overlay {
+  animation: sidebarSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.sidebar-backdrop {
+  animation: backdropFadeIn 0.2s ease forwards;
+}
+
+/* ── Responsive grid helpers ── */
+@media (max-width: 767px) {
+  .responsive-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  .responsive-grid-5 { grid-template-columns: repeat(2, 1fr) !important; }
+  .responsive-grid-2-sidebar { grid-template-columns: 1fr !important; }
+  .responsive-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+@media (max-width: 480px) {
+  .responsive-grid-4 { grid-template-columns: 1fr !important; }
+  .responsive-grid-5 { grid-template-columns: 1fr !important; }
 }

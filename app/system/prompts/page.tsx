@@ -166,7 +166,7 @@ export default function PromptCanaryDashboard() {
                 <div key={m.label} style={{ background: "#fff", borderRadius: 8, padding: "10px 12px", border: `1px solid ${improved ? "#d1fae5" : "#fde68a"}` }}>
                   <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 6 }}>{m.label}</div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
-                    <span style={{ fontSize: 20, fontWeight: 700, color: "#7c3aed", fontFamily: "'DM Serif Display', serif" }}>
+                    <span style={{ fontSize: 20, fontWeight: 700, color: "#7c3aed" }}>
                       {m.canaryVal}{m.unit}
                     </span>
                     <span style={{ fontSize: 11, color: improved ? "#16a34a" : "#d97706", fontWeight: 600 }}>

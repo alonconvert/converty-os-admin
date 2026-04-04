@@ -82,7 +82,7 @@ export default function AiCostReport() {
   const displayTotal = period === "today" ? totalToday : period === "week" ? totalWeek : totalMonth;
 
   return (
-    <div style={{ padding: "18px 20px", maxWidth: 1100 }}>
+    <div style={{ padding: "18px 16px", maxWidth: 1100 }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
@@ -113,7 +113,7 @@ export default function AiCostReport() {
       </div>
 
       {/* KPI row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+      <div className="responsive-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
         {[
           { label: "AI Spend", value: `₪${displayTotal.toFixed(2)}`, sub: period === "today" ? "today" : period === "week" ? "last 7 days" : "this month", alert: totalToday > 5 },
           { label: "Monthly Budget", value: `₪${monthlyBudget}`, sub: `${Math.round(budgetUsed)}% used`, alert: budgetUsed > 80 },
@@ -122,7 +122,7 @@ export default function AiCostReport() {
         ].map((kpi) => (
           <div key={kpi.label} style={{ background: "#fff", borderRadius: 10, border: `1px solid ${kpi.alert ? "#fca5a5" : "#e5e7eb"}`, padding: "12px 14px" }}>
             <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>{kpi.label}</div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: kpi.alert ? "#dc2626" : "#111827", fontFamily: "'DM Serif Display', serif", lineHeight: 1.1 }}>{kpi.value}</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: kpi.alert ? "#dc2626" : "#111827", lineHeight: 1.1 }}>{kpi.value}</div>
             <div style={{ fontSize: 10, color: kpi.alert ? "#dc2626" : "#6b7280", marginTop: 3 }}>{kpi.sub}</div>
           </div>
         ))}

@@ -7,9 +7,9 @@ import type { CampaignRiskTier } from "@/lib/mock-data";
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const RISK_COLORS: Record<CampaignRiskTier, { bg: string; color: string; label: string; border: string }> = {
-  autonomous: { bg: "#f0fdf4", color: "#16a34a", label: "Autonomous", border: "#bbf7d0" },
-  approve_24h: { bg: "#fffbeb", color: "#d97706", label: "24h Approve", border: "#fde68a" },
-  immediate: { bg: "#fef2f2", color: "#dc2626", label: "Immediate", border: "#fca5a5" },
+  autonomous: { bg: "var(--risk-auto-bg)", color: "var(--risk-auto)", label: "Autonomous", border: "#bbf7d0" },
+  approve_24h: { bg: "var(--risk-24h-bg)", color: "var(--risk-24h)", label: "24h Approve", border: "#fde68a" },
+  immediate: { bg: "var(--risk-immed-bg)", color: "var(--risk-immed)", label: "Immediate", border: "#fca5a5" },
 };
 
 function CPLSparkline({ data, target }: { data: number[]; target: number }) {
@@ -45,34 +45,34 @@ function CampaignStatusChip({ status, learningPhase, pendingChange, budgetPct }:
 }) {
   if (budgetPct >= 95) {
     return (
-      <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#fef2f2", color: "#dc2626", border: "1px solid #fca5a5", whiteSpace: "nowrap" }}>
+      <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#fef2f2", color: "#dc2626", border: "1px solid #fca5a5", whiteSpace: "nowrap" }}>
         BUDGET EXHAUSTED
       </span>
     );
   }
   if (learningPhase) {
     return (
-      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe" }}>
+      <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe" }}>
         🎓 LEARNING
       </span>
     );
   }
   if (pendingChange) {
     return (
-      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#fffbeb", color: "#d97706", border: "1px solid #fde68a" }}>
+      <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#fffbeb", color: "#d97706", border: "1px solid #fde68a" }}>
         ⏳ PENDING
       </span>
     );
   }
   if (status === "active") {
     return (
-      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}>
+      <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}>
         ● ACTIVE
       </span>
     );
   }
   return (
-    <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#f3f4f6", color: "#6b7280", border: "1px solid #e5e7eb" }}>
+    <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 99, fontWeight: 700, background: "#f3f4f6", color: "#6b7280", border: "1px solid #e5e7eb" }}>
       ⏸ PAUSED
     </span>
   );
@@ -124,7 +124,7 @@ function ActionModal({ campaignName, onClose }: { campaignName: string; onClose:
             const actions = CAMPAIGN_ACTIONS.filter((a) => a.riskTier === tier);
             return (
               <div key={tier}>
-                <div style={{ padding: "8px 18px 4px", fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                <div style={{ padding: "8px 18px 4px", fontSize: 12, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                   {rc.label}
                 </div>
                 {actions.map((action) => (
@@ -210,7 +210,7 @@ export default function Campaigns() {
   }
 
   return (
-    <div style={{ padding: "18px 20px", maxWidth: 1440 }}>
+    <div style={{ padding: "18px 16px", maxWidth: 1440 }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <div>
@@ -236,14 +236,14 @@ export default function Campaigns() {
       </div>
 
       {/* Summary KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+      <div className="responsive-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
         {/* Total Spend */}
         <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "11px 14px" }}>
           <div className="num-display" dir="ltr" style={{ fontSize: 22, fontWeight: 700, color: "#111827" }}>
             ₪{totalSpend.toLocaleString()}
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginTop: 3 }}>Total Spend (MTD)</div>
-          <div dir="ltr" style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>of ₪{totalBudget.toLocaleString()} budget</div>
+          <div dir="ltr" style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>of ₪{totalBudget.toLocaleString()} budget</div>
         </div>
 
         {/* Total Leads */}
@@ -252,7 +252,7 @@ export default function Campaigns() {
             {totalLeads}
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginTop: 3 }}>Total Leads (MTD)</div>
-          <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>avg CPL ₪{avgCpl}</div>
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>avg CPL ₪{avgCpl}</div>
         </div>
 
         {/* Budget Pace */}
@@ -261,7 +261,7 @@ export default function Campaigns() {
             {spendPct}%
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginTop: 3 }}>Budget Pace</div>
-          <div style={{ fontSize: 10, color: paceSubColor, marginTop: 2, fontWeight: 600 }}>{paceSubText}</div>
+          <div style={{ fontSize: 12, color: paceSubColor, marginTop: 2, fontWeight: 600 }}>{paceSubText}</div>
         </div>
 
         {/* AI Change Queue */}
@@ -270,7 +270,7 @@ export default function Campaigns() {
             {pendingChanges.length}
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginTop: 3 }}>AI Change Queue</div>
-          <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>pending your approval</div>
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>pending your approval</div>
         </div>
       </div>
 
@@ -288,12 +288,12 @@ export default function Campaigns() {
             return (
               <div
                 key={camp.id}
-                style={{ padding: "12px 14px", borderBottom: "1px solid #fef9c3", display: "flex", alignItems: "flex-start", gap: 12 }}
+                style={{ padding: "12px 16px", borderBottom: "1px solid #fef9c3", display: "flex", alignItems: "flex-start", gap: 16 }}
               >
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                     <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{camp.name}</span>
-                    <span style={{ fontSize: 10, color: "#9ca3af" }}>{camp.clientName}</span>
+                    <span style={{ fontSize: 12, color: "#6b7280" }}>{camp.clientName}</span>
                     <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 99, fontWeight: 700, background: rc.bg, color: rc.color }}>
                       {rc.label}
                     </span>
@@ -304,7 +304,7 @@ export default function Campaigns() {
                     <span style={{ margin: "0 6px", color: "#d1d5db" }}>→</span>
                     <span dir="ltr" style={{ fontWeight: 600, color: "#4F46E5" }}>{change.proposed}</span>
                   </div>
-                  <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 3, fontStyle: "italic" }}>{change.reasoning}</div>
+                  <div style={{ fontSize: 12, color: "#6b7280", marginTop: 3, fontStyle: "italic" }}>{change.reasoning}</div>
                 </div>
                 <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
                   <button
@@ -330,8 +330,8 @@ export default function Campaigns() {
       {canaryDeployment.active && (
         <div style={{
           background: "#faf5ff", border: "1px solid #e9d5ff", borderRadius: 8,
-          padding: "10px 14px", marginBottom: 12,
-          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+          padding: "10px 16px", marginBottom: 12,
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
         }}>
           <div style={{ flex: 1 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: "#7c3aed" }}>
@@ -363,13 +363,20 @@ export default function Campaigns() {
       )}
 
       {/* Campaign table */}
-      <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+      <div className="responsive-table-wrap" style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+        {filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--text-muted)' }}>
+            <svg width="40" height="40" style={{ margin: '0 auto 12px', display: 'block', opacity: 0.4 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>אין קמפיינים</p>
+            <p style={{ fontSize: 12 }}>קמפיינים יופיעו כאן לאחר סנכרון</p>
+          </div>
+        )}
         <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid #f3f4f6", background: "#fafafa" }}>
-              {["Campaign", "Client", "Platform", "Risk Tier", "Spend / Budget", "ETA", "CPL (7d trend)", "Status", "AI Action", "Actions"].map((h) => (
+              {["קמפיין", "לקוח", "פלטפורמה", "רמת סיכון", "הוצאה / תקציב", "ETA", "CPL (מגמה 7י)", "סטטוס", "פעולת AI", "פעולות"].map((h) => (
                 <th key={h} style={{
-                  textAlign: "left", padding: "8px 12px", fontSize: 10, fontWeight: 700,
+                  textAlign: "left", padding: "8px 12px", fontSize: 12, fontWeight: 700,
                   color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap",
                 }}>
                   {h}
@@ -416,7 +423,7 @@ export default function Campaigns() {
                       {camp.platform === "google" ? "🔵 Google" : "🟣 Meta"}
                     </span>
                     {camp.qualityScore && (
-                      <div style={{ fontSize: 9, color: camp.qualityScore >= 7 ? "#16a34a" : "#d97706", marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: camp.qualityScore >= 7 ? "#16a34a" : "#d97706", marginTop: 2 }}>
                         QS: {camp.qualityScore}/10
                       </div>
                     )}
@@ -442,11 +449,12 @@ export default function Campaigns() {
                         <div style={{
                           width: `${usage}%`, height: "100%", borderRadius: 99,
                           background: usage >= 90 ? "#dc2626" : usage >= 70 ? "#d97706" : "#22c55e",
+                          transition: 'width 0.3s ease',
                         }} />
                       </div>
-                      <span style={{ fontSize: 10, color: "#9ca3af" }}>{usage}%</span>
+                      <span style={{ fontSize: 12, color: "#6b7280" }}>{usage}%</span>
                     </div>
-                    <div dir="ltr" style={{ fontSize: 9, color: "#d1d5db" }}>of ₪{camp.budget.toLocaleString()}</div>
+                    <div dir="ltr" style={{ fontSize: 12, color: "#6b7280" }}>of ₪{camp.budget.toLocaleString()}</div>
                   </td>
 
                   {/* ETA column */}
@@ -464,7 +472,7 @@ export default function Campaigns() {
                         <div dir="ltr" style={{ fontSize: 12, fontWeight: 700, color: cplOk ? "#16a34a" : "#dc2626" }}>
                           ₪{camp.cpl}
                         </div>
-                        <div dir="ltr" style={{ fontSize: 9, color: "#9ca3af" }}>
+                        <div dir="ltr" style={{ fontSize: 11, color: "#9ca3af" }}>
                           target ₪{camp.cplTarget}
                         </div>
                       </div>
@@ -484,7 +492,7 @@ export default function Campaigns() {
                   {/* AI last action — expandable chip */}
                   <td style={{ padding: "10px 12px", position: "relative", minWidth: 160 }}>
                     {camp.learningPhase ? (
-                      <span style={{ fontSize: 10, color: "#9ca3af" }}>Blocked — learning</span>
+                      <span style={{ fontSize: 12, color: "#6b7280" }}>Blocked — learning</span>
                     ) : camp.aiLastAction ? (
                       <div>
                         <button
@@ -498,7 +506,7 @@ export default function Campaigns() {
                         >
                           {camp.aiLastAction} ▾
                         </button>
-                        <div style={{ fontSize: 9, color: "#d1d5db", marginTop: 2 }}>{camp.aiLastActionDays}d ago</div>
+                        <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{camp.aiLastActionDays}d ago</div>
 
                         {isExpanded && (
                           <div style={{
@@ -507,7 +515,7 @@ export default function Campaigns() {
                             padding: "8px 10px", width: 240, boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                           }}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                              <span style={{ fontSize: 10, fontWeight: 700, color: "#374151" }}>Action Log</span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}>Action Log</span>
                               <button
                                 onClick={() => setExpandedAction(null)}
                                 style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 13, lineHeight: 1 }}
@@ -537,7 +545,7 @@ export default function Campaigns() {
                         )}
                       </div>
                     ) : (
-                      <span style={{ fontSize: 10, color: "#d1d5db" }}>—</span>
+                      <span style={{ fontSize: 12, color: "#6b7280" }}>—</span>
                     )}
                   </td>
 
@@ -546,7 +554,7 @@ export default function Campaigns() {
                     <button
                       onClick={() => setActionModal(camp.name)}
                       style={{
-                        fontSize: 10, padding: "4px 9px", borderRadius: 5,
+                        fontSize: 12, padding: "4px 9px", borderRadius: 5,
                         background: "#f3f4f6", border: "1px solid #e5e7eb", cursor: "pointer", color: "#374151", fontWeight: 500,
                       }}
                     >

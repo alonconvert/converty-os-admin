@@ -186,7 +186,7 @@ function ConfidenceBar({ pct }: { pct: number }) {
   return (
     <div>
       <div style={{ fontSize: 28, fontWeight: 700, color: confidenceColor, lineHeight: 1 }}>{pct}%</div>
-      <div style={{ fontSize: 10, color: confidenceColor, fontWeight: pct >= 95 ? 700 : 500, marginTop: 2 }}>
+      <div style={{ fontSize: 12, color: confidenceColor, fontWeight: pct >= 95 ? 700 : 500, marginTop: 2 }}>
         {confidenceLabel}
       </div>
     </div>
@@ -203,7 +203,7 @@ export default function Creative() {
   const activeLPs = LANDING_PAGES.filter((p) => p.status === "active").length;
 
   return (
-    <div style={{ padding: "18px 20px", maxWidth: 1100 }}>
+    <div style={{ padding: "18px 16px", maxWidth: 1100 }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <div>
@@ -218,7 +218,7 @@ export default function Creative() {
       </div>
 
       {/* KPI row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+      <div className="responsive-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
         {[
           { label: "Running A/B Tests", value: runningTests, color: "#4F46E5", sub: `${concludedTests} concluded this month` },
           { label: "Landing Pages Live", value: activeLPs, color: "#059669", sub: "2 variants each target" },
@@ -226,9 +226,9 @@ export default function Creative() {
           { label: "Tests Won This Month", value: concludedTests, color: "#7c3aed", sub: "auto-deployed winners" },
         ].map((kpi) => (
           <div key={kpi.label} style={{ background: "#fff", borderRadius: 10, border: `1px solid ${kpi.urgent ? "#fde68a" : "#e5e7eb"}`, padding: "12px 14px" }}>
-            <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>{kpi.label}</div>
-            <div style={{ fontSize: 26, fontWeight: 700, color: kpi.color, fontFamily: "'DM Serif Display', serif", lineHeight: 1.1 }}>{kpi.value}</div>
-            <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 3 }}>{kpi.sub}</div>
+            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>{kpi.label}</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: kpi.color, lineHeight: 1.1 }}>{kpi.value}</div>
+            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 3 }}>{kpi.sub}</div>
           </div>
         ))}
       </div>
@@ -281,19 +281,19 @@ export default function Creative() {
               <div key={test.id} style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
                 {/* Card header */}
                 <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #f3f4f6" }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 3, background: typeCfg.bg, color: typeCfg.color }}>{typeCfg.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, padding: "2px 7px", borderRadius: 3, background: typeCfg.bg, color: typeCfg.color }}>{typeCfg.label}</span>
                   <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{test.name}</span>
-                  <span style={{ fontSize: 11, color: "#9ca3af" }}>— {test.clientName}</span>
+                  <span style={{ fontSize: 12, color: "#9ca3af" }}>— {test.clientName}</span>
                   {verticalNote && (
                     <span style={{ fontSize: 9, color: "#6b7280", background: "#f9fafb", padding: "1px 5px", borderRadius: 3 }}>
                       {verticalNote}
                     </span>
                   )}
                   <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 10, color: "#9ca3af" }}>{test.daysRunning}d running</span>
+                    <span style={{ fontSize: 12, color: "#9ca3af" }}>{test.daysRunning}d running</span>
                     {daysToSignificance !== null && test.status === "running" && (
                       <span style={{
-                        fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
+                        fontSize: 12, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
                         background: daysToSignificance <= 3 ? "#fffbeb" : "#f9fafb",
                         color: daysToSignificance <= 3 ? "#d97706" : "#6b7280",
                         border: `1px solid ${daysToSignificance <= 3 ? "#fde68a" : "#e5e7eb"}`,
@@ -301,14 +301,14 @@ export default function Creative() {
                         ~{daysToSignificance}d to decision
                       </span>
                     )}
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: test.status === "running" ? "#f0fdf4" : test.status === "concluded" ? "#eef2ff" : "#f3f4f6", color: statusColor }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: test.status === "running" ? "#f0fdf4" : test.status === "concluded" ? "#eef2ff" : "#f3f4f6", color: statusColor }}>
                       {test.status === "running" ? "● RUNNING" : test.status === "concluded" ? "✓ CONCLUDED" : "⏸ PAUSED"}
                     </span>
                   </div>
                 </div>
 
                 {/* Variant metrics */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
+                <div className="responsive-grid-4" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0 }}>
                   {[
                     { variant: test.variantA, label: "A", isWinner: test.winner === "A" },
                     { variant: test.variantB, label: "B", isWinner: test.winner === "B" },
@@ -325,10 +325,10 @@ export default function Creative() {
                         }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: showWinner ? "#16a34a" : "#6b7280", background: showWinner ? "#dcfce7" : "#f3f4f6", padding: "1px 6px", borderRadius: 3 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: showWinner ? "#16a34a" : "#6b7280", background: showWinner ? "#dcfce7" : "#f3f4f6", padding: "1px 6px", borderRadius: 3 }}>
                             {label} {showWinner ? "— WINNER ✓" : ""}
                           </span>
-                          <span style={{ fontSize: 11, color: "#6b7280" }}>{variant.label}</span>
+                          <span style={{ fontSize: 12, color: "#6b7280" }}>{variant.label}</span>
                         </div>
                         <div style={{ display: "flex", gap: 14 }}>
                           {[
@@ -337,8 +337,8 @@ export default function Creative() {
                             { label: "Conv%", value: `${variant.convRate}%` },
                           ].map((m) => (
                             <div key={m.label}>
-                              <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", fontFamily: "'DM Serif Display', serif" }}>{m.value}</div>
-                              <div style={{ fontSize: 9, color: "#9ca3af" }}>{m.label}</div>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{m.value}</div>
+                              <div style={{ fontSize: 12, color: "#6b7280" }}>{m.label}</div>
                             </div>
                           ))}
                         </div>
@@ -349,7 +349,7 @@ export default function Creative() {
 
                 {/* Benchmark row */}
                 <div style={{ padding: "6px 16px", borderTop: "1px solid #f3f4f6", background: "#fafafa" }}>
-                  <span style={{ fontSize: 11, color: benchmarkDelta >= 0 ? "#16a34a" : "#dc2626", fontWeight: 500 }}>
+                  <span style={{ fontSize: 12, color: benchmarkDelta >= 0 ? "#16a34a" : "#dc2626", fontWeight: 500 }}>
                     vs Benchmark ₪{historicalCpl}: current best ₪{currentBestCpl} ({benchmarkDelta}% improvement)
                   </span>
                 </div>
@@ -361,7 +361,7 @@ export default function Creative() {
                       <ConfidenceBar pct={test.confidence} />
                     </div>
                     {/* Sample size & velocity */}
-                    <div style={{ fontSize: 10, color: "#9ca3af" }}>
+                    <div style={{ fontSize: 12, color: "#9ca3af" }}>
                       Sample: {totalClicks} clicks (A: {aClicks} / B: {bClicks}) | Velocity: ~{velocity} clicks/day
                       {daysToSignificance !== null && (
                         <span> | Est. significance in {daysToSignificance} more days</span>
@@ -369,11 +369,11 @@ export default function Creative() {
                     </div>
                   </div>
                   {test.status === "concluded" ? (
-                    <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>✓ Winner deployed</span>
+                    <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 600 }}>✓ Winner deployed</span>
                   ) : (
                     <div style={{ display: "flex", gap: 6 }}>
-                      <button style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}>End Test</button>
-                      <button style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, border: "none", background: "#4F46E5", color: "#fff", cursor: "pointer", fontWeight: 600 }}>
+                      <button style={{ fontSize: 12, padding: "3px 8px", borderRadius: 4, border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}>End Test</button>
+                      <button style={{ fontSize: 12, padding: "3px 8px", borderRadius: 4, border: "none", background: "#4F46E5", color: "#fff", cursor: "pointer", fontWeight: 600 }}>
                         {test.winner ? "Deploy Winner Now" : "Force Winner"}
                       </button>
                     </div>
@@ -387,12 +387,12 @@ export default function Creative() {
 
       {/* Landing Pages */}
       {activeTab === "pages" && (
-        <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div className="responsive-table-wrap" style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
             <thead>
               <tr style={{ background: "#f9fafb" }}>
                 {["Client", "URL", "Status", "Variants", "Active", "Leads / Week", "CPL", "Last Updated", ""].map((h) => (
-                  <th key={h} style={{ padding: "9px 14px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#9ca3af", borderBottom: "1px solid #f3f4f6", whiteSpace: "nowrap" }}>{h}</th>
+                  <th key={h} style={{ padding: "9px 14px", textAlign: "left", fontSize: 12, fontWeight: 600, color: "#9ca3af", borderBottom: "1px solid #f3f4f6", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -400,23 +400,23 @@ export default function Creative() {
               {LANDING_PAGES.map((lp, i) => (
                 <tr key={lp.id} style={{ borderBottom: i < LANDING_PAGES.length - 1 ? "1px solid #f9fafb" : "none" }}>
                   <td style={{ padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "#111827" }}>{lp.clientName}</td>
-                  <td style={{ padding: "10px 14px", fontSize: 11, color: "#6b7280", fontFamily: "monospace" }}>{lp.url}</td>
+                  <td style={{ padding: "10px 14px", fontSize: 12, color: "#6b7280", fontFamily: "monospace" }}>{lp.url}</td>
                   <td style={{ padding: "10px 14px" }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: lp.status === "active" ? "#f0fdf4" : "#f3f4f6", color: lp.status === "active" ? "#16a34a" : "#6b7280" }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: lp.status === "active" ? "#f0fdf4" : "#f3f4f6", color: lp.status === "active" ? "#16a34a" : "#6b7280" }}>
                       {lp.status}
                     </span>
                   </td>
                   <td style={{ padding: "10px 14px", fontSize: 12, color: "#374151", textAlign: "center" }}>{lp.variants}</td>
                   <td style={{ padding: "10px 14px" }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: "#eef2ff", color: "#4F46E5" }}>Variant {lp.activeVariant}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: "#eef2ff", color: "#4F46E5" }}>Variant {lp.activeVariant}</span>
                   </td>
                   <td style={{ padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "#111827" }}>{lp.leadsThisWeek}</td>
                   <td style={{ padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "#111827" }}>₪{lp.cpl}</td>
-                  <td style={{ padding: "10px 14px", fontSize: 11, color: "#9ca3af" }}>{lp.lastUpdated}</td>
+                  <td style={{ padding: "10px 14px", fontSize: 12, color: "#9ca3af" }}>{lp.lastUpdated}</td>
                   <td style={{ padding: "10px 14px" }}>
                     <div style={{ display: "flex", gap: 4 }}>
-                      <button style={{ fontSize: 10, padding: "3px 7px", borderRadius: 4, border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}>Preview</button>
-                      <button style={{ fontSize: 10, padding: "3px 7px", borderRadius: 4, border: "none", background: "#eef2ff", color: "#4F46E5", cursor: "pointer", fontWeight: 600 }}>New Variant</button>
+                      <button style={{ fontSize: 12, padding: "3px 7px", borderRadius: 4, border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}>Preview</button>
+                      <button style={{ fontSize: 12, padding: "3px 7px", borderRadius: 4, border: "none", background: "#eef2ff", color: "#4F46E5", cursor: "pointer", fontWeight: 600 }}>New Variant</button>
                     </div>
                   </td>
                 </tr>
@@ -436,23 +436,23 @@ export default function Creative() {
             return (
               <div key={copy.id} style={{ background: approved ? "#f0fdf4" : "#fff", borderRadius: 10, border: `1px solid ${approved ? "#bbf7d0" : "#e5e7eb"}`, padding: "14px 16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 3, background: typeCfg.bg, color: typeCfg.color }}>{typeCfg.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, padding: "2px 7px", borderRadius: 3, background: typeCfg.bg, color: typeCfg.color }}>{typeCfg.label}</span>
                   <ComplianceBadge level={compliance.level} msg={compliance.msg} />
                   <span style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{copy.clientName}</span>
-                  <span style={{ fontSize: 11, color: "#9ca3af" }}>→ {copy.targetCampaign}</span>
-                  <span style={{ fontSize: 10, color: "#9ca3af", marginLeft: "auto" }}>{copy.generatedAt}</span>
+                  <span style={{ fontSize: 12, color: "#9ca3af" }}>→ {copy.targetCampaign}</span>
+                  <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: "auto" }}>{copy.generatedAt}</span>
                 </div>
                 <div style={{ background: "#f9fafb", borderRadius: 7, padding: "10px 12px", marginBottom: 10 }} dir="rtl">
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", marginBottom: 4 }}>{copy.headline}</div>
                   <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.5 }}>{copy.description}</div>
                   {/* Character counts */}
                   {copy.type === 'search_headline' && (
-                    <div style={{ fontSize: 10, color: copy.headline.length > 30 ? "#dc2626" : "#9ca3af", marginTop: 4 }} dir="ltr">
+                    <div style={{ fontSize: 12, color: copy.headline.length > 30 ? "#dc2626" : "#9ca3af", marginTop: 4 }} dir="ltr">
                       Headline: {copy.headline.length}/30 chars {copy.headline.length > 30 ? "⚠ OVER LIMIT" : "✓"}
                     </div>
                   )}
                   {(copy.type === 'search_headline' || copy.type === 'facebook_primary') && (
-                    <div style={{ fontSize: 10, color: copy.description.length > 90 ? "#dc2626" : "#9ca3af", marginTop: 2 }} dir="ltr">
+                    <div style={{ fontSize: 12, color: copy.description.length > 90 ? "#dc2626" : "#9ca3af", marginTop: 2 }} dir="ltr">
                       Description: {copy.description.length}/90 chars {copy.description.length > 90 ? "⚠ OVER LIMIT" : "✓"}
                     </div>
                   )}
@@ -464,14 +464,14 @@ export default function Creative() {
                     <>
                       <button
                         onClick={() => setApprovedCopies((p) => [...p, copy.id])}
-                        style={{ fontSize: 11, padding: "5px 12px", borderRadius: 5, border: "none", background: "#22c55e", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+                        style={{ fontSize: 12, padding: "5px 12px", borderRadius: 5, border: "none", background: "#22c55e", color: "#fff", cursor: "pointer", fontWeight: 600 }}
                       >
                         Approve + Add to Test
                       </button>
-                      <button style={{ fontSize: 11, padding: "5px 12px", borderRadius: 5, border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}>
+                      <button style={{ fontSize: 12, padding: "5px 12px", borderRadius: 5, border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}>
                         Edit
                       </button>
-                      <button style={{ fontSize: 11, padding: "5px 12px", borderRadius: 5, border: "1px solid #fca5a5", background: "#fef2f2", color: "#dc2626", cursor: "pointer" }}>
+                      <button style={{ fontSize: 12, padding: "5px 12px", borderRadius: 5, border: "1px solid #fca5a5", background: "#fef2f2", color: "#dc2626", cursor: "pointer" }}>
                         Reject
                       </button>
                     </>

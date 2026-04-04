@@ -95,7 +95,7 @@ export default function Pulse() {
       </div>
 
       {/* Per-client lead counts */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {mockClients.slice(0, 4).map((client) => {
           const total = client.leadsToday;
           const funnel = {
@@ -133,7 +133,7 @@ export default function Pulse() {
       </div>
 
       {/* Leads table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden responsive-table-wrap">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <h2 className="font-semibold text-gray-900 text-sm">All Leads</h2>
@@ -329,7 +329,7 @@ export default function Pulse() {
         <div className="px-4 py-3 border-b border-gray-100">
           <h2 className="font-semibold text-gray-900 text-sm">Pulse Tenant Status</h2>
         </div>
-        <div className="p-4 grid grid-cols-4 gap-3">
+        <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
           {mockClients.slice(0, 4).map((client) => (
             <div key={client.id} className="border border-gray-100 rounded-lg p-3">
               <div className="text-xs font-medium text-gray-800 mb-2 truncate">{client.name}</div>

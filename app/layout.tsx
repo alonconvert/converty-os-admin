@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
+import LayoutShell from "@/components/LayoutShell";
 
 export const metadata: Metadata = {
   title: "Converty OS",
@@ -18,10 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           margin: 0,
         }}
       >
-        <Sidebar />
-        <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
-          {children}
-        </main>
+        <LayoutShell>{children}</LayoutShell>
       </body>
     </html>
   );

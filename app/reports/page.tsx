@@ -29,7 +29,7 @@ function HealthBadge({ score }: { score: number }) {
   else { bg = "#fff1f2"; color = "#be123c"; }
   return (
     <div style={{ width: 28, height: 28, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-      <span style={{ fontSize: 11, fontWeight: 700, color }}>{score}</span>
+      <span style={{ fontSize: 12, fontWeight: 700, color }}>{score}</span>
     </div>
   );
 }
@@ -44,6 +44,14 @@ const DELIVERY_OPTIONS = [
 // Demo: clients id "1" and "5" show a Passover prep holiday chip
 const DEMO_HOLIDAY_CLIENT_IDS = ["1", "5"];
 
+const SKELETON_STYLE = {
+  height: 180,
+  background: "linear-gradient(90deg, #F3F4F6 25%, #E9EAEC 50%, #F3F4F6 75%)",
+  backgroundSize: "200% 100%",
+  animation: "shimmer 1.4s ease-in-out infinite",
+  borderRadius: 8,
+} as const;
+
 export default function Reports() {
   const [deliveryTime, setDeliveryTime] = useState("sun_09");
   const [search, setSearch] = useState("");
@@ -53,6 +61,13 @@ export default function Reports() {
   const [sendAllOpen, setSendAllOpen] = useState(false);
   const [sendAllConfirmed, setSendAllConfirmed] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate async data load (replace with real fetch when backend is wired)
+    const t = setTimeout(() => setLoading(false), 600);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -98,9 +113,9 @@ export default function Reports() {
   const readyCount = reportsReady ? totalClients : 0;
 
   return (
-    <div style={{ padding: "18px 20px", maxWidth: 1100 }}>
+    <div style={{ padding: "18px 16px", maxWidth: 1100 }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0 }}>Reports</h1>
           <p style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>Weekly AI-generated performance reports — {WEEK_LABEL}</p>
@@ -108,7 +123,7 @@ export default function Reports() {
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <Link
             href="/reports/costs"
-            style={{ fontSize: 11, padding: "6px 12px", borderRadius: 6, background: "#faf5ff", color: "#7c3aed", border: "1px solid #e9d5ff", textDecoration: "none", fontWeight: 600 }}
+            style={{ fontSize: 12, padding: "6px 12px", borderRadius: 6, background: "#faf5ff", color: "#7c3aed", border: "1px solid #e9d5ff", textDecoration: "none", fontWeight: 600 }}
           >
             🤖 AI Cost Report →
           </Link>
@@ -136,32 +151,37 @@ export default function Reports() {
       </div>
 
       {/* Summary KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+      {loading ? (
+        <div className="responsive-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+          {[1,2,3,4].map((i) => <div key={i} style={SKELETON_STYLE} />)}
+        </div>
+      ) : null}
+      <div className="responsive-grid-4" style={{ display: loading ? "none" : "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
         {/* Total Leads */}
         <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: "12px 14px" }}>
-          <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>Total Leads</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "#4F46E5", fontFamily: "'DM Serif Display', serif" }}>{systemStats.leadsToday * 7}</div>
-          <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>this week</div>
-          <div style={{ fontSize: 10, color: "#059669", marginTop: 4 }}>↑ +23 vs last week (+5.1%)</div>
+          <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>Total Leads</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: "#4F46E5" }}>{systemStats.leadsToday * 7}</div>
+          <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>this week</div>
+          <div style={{ fontSize: 12, color: "#059669", marginTop: 4 }}>↑ +23 vs last week (+5.1%)</div>
         </div>
         {/* Avg CPL */}
         <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: "12px 14px" }}>
-          <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>Avg CPL</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: systemStats.monthlyCpl <= systemStats.monthlyCplTarget ? "#059669" : "#dc2626", fontFamily: "'DM Serif Display', serif" }}>₪{systemStats.monthlyCpl}</div>
-          <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>target ₪{systemStats.monthlyCplTarget}</div>
-          <div style={{ fontSize: 10, color: "#dc2626", marginTop: 4 }}>↑ +₪3 vs last week (+3.4%)</div>
+          <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>Avg CPL</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: systemStats.monthlyCpl <= systemStats.monthlyCplTarget ? "#059669" : "#dc2626" }}>₪{systemStats.monthlyCpl}</div>
+          <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>target ₪{systemStats.monthlyCplTarget}</div>
+          <div style={{ fontSize: 12, color: "#dc2626", marginTop: 4 }}>↑ +₪3 vs last week (+3.4%)</div>
         </div>
         {/* Total Spend */}
         <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: "12px 14px" }}>
-          <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>Total Spend</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "#111827", fontFamily: "'DM Serif Display', serif" }}>₪{(systemStats.monthlySpend / 4).toLocaleString()}</div>
-          <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>week est.</div>
-          <div style={{ fontSize: 10, color: "#6b7280", marginTop: 4 }}>↑ +₪1,800 vs last week (+6.8%)</div>
+          <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>Total Spend</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: "#111827" }}>₪{(systemStats.monthlySpend / 4).toLocaleString()}</div>
+          <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>week est.</div>
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>↑ +₪1,800 vs last week (+6.8%)</div>
         </div>
         {/* Reports Ready */}
         <div style={{ background: readyCount === 0 ? "#fafafa" : "#fff", borderRadius: 10, border: readyCount === 0 ? "1px solid #c7d2fe" : "1px solid #e5e7eb", padding: "12px 14px" }}>
-          <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>Reports Ready</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: readyCount === 0 ? "#6b7280" : "#4F46E5", fontFamily: "'DM Serif Display', serif" }}>{readyCount}/{totalClients}</div>
+          <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4 }}>Reports Ready</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: readyCount === 0 ? "#6b7280" : "#4F46E5" }}>{readyCount}/{totalClients}</div>
           {/* Progress bar */}
           <div style={{ display: "flex", gap: 2, marginTop: 6, marginBottom: 4 }}>
             {Array.from({ length: totalClients }).map((_, i) => (
@@ -173,7 +193,7 @@ export default function Reports() {
               onClick={handleGenerate}
               disabled={generating}
               style={{
-                width: "100%", marginTop: 4, fontSize: 11, padding: "5px 0", borderRadius: 5,
+                width: "100%", marginTop: 4, fontSize: 12, padding: "5px 0", borderRadius: 5,
                 border: "none", background: generating ? "#e5e7eb" : "#4F46E5",
                 color: generating ? "#9ca3af" : "#fff",
                 cursor: generating ? "default" : "pointer", fontWeight: 700,
@@ -182,13 +202,22 @@ export default function Reports() {
               {generating ? "Generating…" : "↑ Generate Reports"}
             </button>
           ) : (
-            <div style={{ fontSize: 10, color: "#4F46E5", fontWeight: 600, marginTop: 2 }}>Ready to send</div>
+            <div style={{ fontSize: 12, color: "#4F46E5", fontWeight: 600, marginTop: 2 }}>Ready to send</div>
           )}
-          <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 3 }}>{countdown || "calculating…"}</div>
+          <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 3 }}>{countdown || "calculating…"}</div>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 12 }}>
+      {loading && (
+        <div className="responsive-grid-2-sidebar" style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 12 }}>
+          <div style={SKELETON_STYLE} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ ...SKELETON_STYLE, height: 120 }} />
+            <div style={{ ...SKELETON_STYLE, height: 120 }} />
+          </div>
+        </div>
+      )}
+      <div className="responsive-grid-2-sidebar" style={{ display: loading ? "none" : "grid", gridTemplateColumns: "1fr 280px", gap: 12 }}>
         {/* Report cards */}
         <div>
           {/* Search */}
@@ -223,7 +252,7 @@ export default function Reports() {
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 1 }}>{client.domain} · {WEEK_LABEL}</div>
+                    <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 1 }}>{client.domain} · {WEEK_LABEL}</div>
                   </div>
 
                   {/* Sparkline */}
@@ -241,29 +270,29 @@ export default function Reports() {
                     ].map((m) => (
                       <div key={m.label} style={{ textAlign: "right" }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: m.alert ? "#dc2626" : "#111827" }}>{m.value}</div>
-                        <div style={{ fontSize: 9, color: "#9ca3af" }}>{m.label}</div>
+                        <div style={{ fontSize: 12, color: "#6b7280" }}>{m.label}</div>
                       </div>
                     ))}
                   </div>
 
                   {/* Actions */}
                   <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
-                    <button style={{ fontSize: 10, padding: "4px 8px", borderRadius: 5, border: "none", background: "#eef2ff", color: "#4F46E5", cursor: "pointer", fontWeight: 600 }}>
+                    <button style={{ fontSize: 12, padding: "4px 8px", borderRadius: 5, border: "none", background: "#eef2ff", color: "#4F46E5", cursor: "pointer", fontWeight: 600 }}>
                       View
                     </button>
                     {isHumanTakeover ? (
                       <button
                         disabled
-                        style={{ fontSize: 10, padding: "4px 8px", borderRadius: 5, border: "1px solid #fca5a5", background: "#fef2f2", color: "#dc2626", cursor: "default", fontWeight: 600 }}
+                        style={{ fontSize: 12, padding: "4px 8px", borderRadius: 5, border: "1px solid #fca5a5", background: "#fef2f2", color: "#dc2626", cursor: "default", fontWeight: 600 }}
                       >
                         HT Required
                       </button>
                     ) : (
-                      <button style={{ fontSize: 10, padding: "4px 8px", borderRadius: 5, border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}>
+                      <button style={{ fontSize: 12, padding: "4px 8px", borderRadius: 5, border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}>
                         Send
                       </button>
                     )}
-                    <button style={{ fontSize: 10, padding: "4px 8px", borderRadius: 5, border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}>
+                    <button style={{ fontSize: 12, padding: "4px 8px", borderRadius: 5, border: "1px solid #e5e7eb", background: "#fff", color: "#374151", cursor: "pointer" }}>
                       🔄
                     </button>
                   </div>
@@ -299,7 +328,7 @@ export default function Reports() {
                 </button>
               ))}
             </div>
-            <div style={{ marginTop: 10, fontSize: 10, color: "#9ca3af", textAlign: "center" }}>
+            <div style={{ marginTop: 10, fontSize: 12, color: "#9ca3af", textAlign: "center" }}>
               Reports delivered via WhatsApp to each client
             </div>
           </div>
@@ -308,9 +337,9 @@ export default function Reports() {
           <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: "14px 16px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <h2 style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: 0 }}>AI Cost Today</h2>
-              <Link href="/reports/costs" style={{ fontSize: 10, color: "#7c3aed", textDecoration: "none", fontWeight: 600 }}>Full Report →</Link>
+              <Link href="/reports/costs" style={{ fontSize: 12, color: "#7c3aed", textDecoration: "none", fontWeight: 600 }}>Full Report →</Link>
             </div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#111827", fontFamily: "'DM Serif Display', serif", marginBottom: 6 }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#111827", marginBottom: 6 }}>
               ₪{systemStats.aiSpendToday.toFixed(2)}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -321,8 +350,8 @@ export default function Reports() {
               ].map((m) => (
                 <div key={m.label}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                    <span style={{ fontSize: 10, color: "#6b7280" }}>{m.label}</span>
-                    <span style={{ fontSize: 10, color: m.color, fontWeight: 600 }}>{m.pct}%</span>
+                    <span style={{ fontSize: 12, color: "#6b7280" }}>{m.label}</span>
+                    <span style={{ fontSize: 12, color: m.color, fontWeight: 600 }}>{m.pct}%</span>
                   </div>
                   <div style={{ height: 3, background: "#f3f4f6", borderRadius: 99, overflow: "hidden" }}>
                     <div style={{ width: `${m.pct}%`, height: "100%", background: m.color, borderRadius: 99 }} />
@@ -343,8 +372,8 @@ export default function Reports() {
                 { label: "Pending approval", value: 0 },
               ].map((r) => (
                 <div key={r.label} style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 11, color: "#6b7280" }}>{r.label}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#111827" }}>{r.value}</span>
+                  <span style={{ fontSize: 12, color: "#6b7280" }}>{r.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>{r.value}</span>
                 </div>
               ))}
             </div>
@@ -362,7 +391,7 @@ export default function Reports() {
               {redOrangeClients.map((c) => (
                 <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#fef2f2", borderRadius: 7, border: "1px solid #fca5a5" }}>
                   <span style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{c.name}</span>
-                  <span style={{ fontSize: 10, color: "#dc2626", fontWeight: 600 }}>Review manually first</span>
+                  <span style={{ fontSize: 12, color: "#dc2626", fontWeight: 600 }}>Review manually first</span>
                 </div>
               ))}
             </div>

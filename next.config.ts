@@ -1,12 +1,12 @@
 import type { NextConfig } from "next";
-
-const isProd = process.env.NODE_ENV === "production";
-const basePath = isProd ? "/converty-os-admin" : "";
+import path from "path";
 
 const nextConfig: NextConfig = {
   output: "export",
-  basePath,
   images: { unoptimized: true },
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
 };
 
 export default nextConfig;

@@ -37,7 +37,7 @@ export default function Onboarding() {
   const toggleGate = (i: number) => setGates((prev) => prev.map((g, idx) => idx === i ? { ...g, done: !g.done } : g));
 
   return (
-    <div style={{ padding: "18px 20px", maxWidth: 900 }}>
+    <div style={{ padding: "18px 16px", maxWidth: 900 }}>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0 }}>Client Onboarding</h1>
         <p style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>Step-by-step flow — complete all gates before first message sends</p>
@@ -56,13 +56,13 @@ export default function Onboarding() {
       </div>
 
       {/* Steps */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 20, background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 0, marginBottom: 20, background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
         {STEPS.map((step, i) => (
           <button
             key={step.id}
             onClick={() => setActiveStep(step.id)}
             style={{
-              flex: 1, padding: "10px 8px", border: "none", borderRight: i < STEPS.length - 1 ? "1px solid #f3f4f6" : "none",
+              flex: "1 1 auto", minWidth: 80, padding: "10px 8px", border: "none", borderRight: i < STEPS.length - 1 ? "1px solid #f3f4f6" : "none",
               background: activeStep === step.id ? "#4F46E5" : "#fff",
               cursor: "pointer", textAlign: "center",
             }}
