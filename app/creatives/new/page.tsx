@@ -34,9 +34,17 @@ export default function NewBatchPage() {
     });
   }, []);
 
+  const [saved, setSaved] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const handleSubmit = async () => {
     if (!clientId) {
       setError("יש לבחור לקוח");
+      return;
+    }
+    // Show confirmation step first
+    if (!showConfirm) {
+      setShowConfirm(true);
       return;
     }
     setError(null);
@@ -49,10 +57,14 @@ export default function NewBatchPage() {
           ? { transcriptText }
           : {}),
       });
+      // Show saved confirmation before redirect
+      setSaved(true);
+      await new Promise((r) => setTimeout(r, 1500));
       router.push(`/creatives?batchId=${result.batch.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "שגיאה ביצירת באצ׳");
       setSubmitting(false);
+      setShowConfirm(false);
     }
   };
 
@@ -356,54 +368,170 @@ export default function NewBatchPage() {
                 </div>
               )}
 
-              {/* Submit */}
-              <button
-                onClick={handleSubmit}
-                disabled={submitting || !clientId}
-                style={{
-                  fontSize: 14,
-                  padding: "11px 24px",
-                  borderRadius: 8,
-                  border: "none",
-                  background: submitting || !clientId ? "#c4b5fd" : "var(--brand)",
-                  color: "#fff",
-                  cursor: submitting || !clientId ? "not-allowed" : "pointer",
-                  fontWeight: 700,
-                  width: "100%",
-                  boxShadow: submitting || !clientId ? "none" : "0 2px 8px rgba(124,58,237,0.25)",
-                  transition: "all 0.2s",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                }}
-                onMouseEnter={(e) => {
-                  if (!submitting && clientId) {
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(124,58,237,0.35)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = submitting || !clientId ? "none" : "0 2px 8px rgba(124,58,237,0.25)";
-                }}
-              >
-                {submitting ? (
-                  <>
-                    <span className="pill-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />
-                    יוצר באצ׳...
-                  </>
-                ) : (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <path d="M21 15l-5-5L5 21" />
+              {/* Saved confirmation */}
+              {saved && (
+                <div
+                  style={{
+                    background: "#ECFDF5",
+                    border: "1px solid #A7F3D0",
+                    borderRadius: 10,
+                    padding: "16px 20px",
+                    marginBottom: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    animation: "adminCountUp 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: "#059669",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round">
+                      <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    צור באצ׳
-                  </>
-                )}
-              </button>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#065F46" }}>
+                      הטרנסקריפט נשמר בהצלחה
+                    </div>
+                    <div style={{ fontSize: 12, color: "#047857", marginTop: 2 }}>
+                      {selectedClient?.name} — {batchSize} קריאייטיבים · מעביר למסך הייצור...
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Confirmation step */}
+              {showConfirm && !saved && !submitting && (
+                <div
+                  style={{
+                    background: "#FFFBEB",
+                    border: "1px solid #FDE68A",
+                    borderRadius: 10,
+                    padding: "16px 18px",
+                    marginBottom: 16,
+                    animation: "adminCountUp 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E", marginBottom: 6 }}>
+                    אישור לפני שליחה
+                  </div>
+                  <div dir="rtl" style={{ fontSize: 12, color: "#78350F", lineHeight: 1.6, marginBottom: 12 }}>
+                    <strong>{selectedClient?.name}</strong> — {batchSize} קריאייטיבים
+                    {transcriptMode === "paste" && transcriptText ? ` · טרנסקריפט ידני (${transcriptText.length} תווים)` : " · טרנסקריפט אוטומטי"}
+                    <br />
+                    <span style={{ fontSize: 11, color: "#92400E" }}>
+                      אחרי היצירה תוכל לסקור, לאשר או לדחות כל קונספט בנפרד.
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={handleSubmit}
+                      style={{
+                        fontSize: 12,
+                        padding: "8px 18px",
+                        borderRadius: 6,
+                        border: "none",
+                        background: "var(--brand)",
+                        color: "#fff",
+                        cursor: "pointer",
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        boxShadow: "0 2px 8px rgba(124,58,237,0.25)",
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      אישור — צור באצ׳
+                    </button>
+                    <button
+                      onClick={() => setShowConfirm(false)}
+                      style={{
+                        fontSize: 12,
+                        padding: "8px 14px",
+                        borderRadius: 6,
+                        border: "1px solid var(--card-border)",
+                        background: "#fff",
+                        color: "var(--text-secondary)",
+                        cursor: "pointer",
+                        fontWeight: 600,
+                      }}
+                    >
+                      חזור ותקן
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit */}
+              {!saved && !showConfirm && (
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting || !clientId}
+                  style={{
+                    fontSize: 14,
+                    padding: "11px 24px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: submitting || !clientId ? "#c4b5fd" : "var(--brand)",
+                    color: "#fff",
+                    cursor: submitting || !clientId ? "not-allowed" : "pointer",
+                    fontWeight: 700,
+                    width: "100%",
+                    boxShadow: submitting || !clientId ? "none" : "0 2px 8px rgba(124,58,237,0.25)",
+                    transition: "all 0.2s",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!submitting && clientId) {
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(124,58,237,0.35)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = submitting || !clientId ? "none" : "0 2px 8px rgba(124,58,237,0.25)";
+                  }}
+                >
+                  המשך
+                </button>
+              )}
+
+              {/* Submitting state */}
+              {submitting && !saved && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    padding: "11px 24px",
+                    borderRadius: 8,
+                    background: "#c4b5fd",
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: 14,
+                  }}
+                >
+                  <span className="pill-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />
+                  שומר ויוצר באצ׳...
+                </div>
+              )}
             </>
           )}
         </div>

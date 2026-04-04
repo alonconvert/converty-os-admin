@@ -6,6 +6,7 @@ import Link from "next/link";
 import { fetchClients, type DbClient } from "@/lib/db";
 import {
   fetchBatches,
+  fetchBatchById,
   fetchConcepts,
   reviewConcept,
   type MetaBatch,
@@ -546,6 +547,269 @@ function ConceptCard({
   );
 }
 
+// ── Generation Progress ─────────────────────────────────────────────────────
+
+const PIPELINE_STEPS = [
+  { key: "distill", label: "מפרק טרנסקריפט", icon: "📝" },
+  { key: "copy", label: "כותב קופי", icon: "✍️" },
+  { key: "text", label: "טקסט לתמונה", icon: "🔤" },
+  { key: "visual", label: "מתכנן ויזואל", icon: "🎨" },
+  { key: "imagen1", label: "מייצר רקע", icon: "🖼️" },
+  { key: "overlay", label: "מוסיף שכבות", icon: "📐" },
+  { key: "composite", label: "מרכיב טקסט + לוגו", icon: "🔲" },
+  { key: "resize", label: "מתאים גדלים", icon: "📏" },
+];
+
+function GenerationProgress({
+  conceptCount,
+  pendingCount,
+  batchSize,
+  pollCount,
+  onBack,
+}: {
+  conceptCount: number;
+  pendingCount: number;
+  batchSize: number;
+  pollCount: number;
+  onBack: () => void;
+}) {
+  const [activeStep, setActiveStep] = useState(0);
+  const [dots, setDots] = useState("");
+  const [elapsed, setElapsed] = useState(0);
+
+  // Cycle through pipeline steps
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveStep((s) => (s + 1) % PIPELINE_STEPS.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Animated dots
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((d) => (d.length >= 3 ? "" : d + "."));
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Elapsed timer
+  useEffect(() => {
+    const interval = setInterval(() => setElapsed((e) => e + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const completedCount = conceptCount > 0 ? conceptCount - pendingCount : 0;
+  const totalTarget = batchSize || conceptCount || 1;
+  const completedFraction = conceptCount > 0 ? (completedCount / totalTarget) * 100 : 0;
+
+  // Estimated time: ~30s per concept is a rough estimate
+  const estTotalSec = totalTarget * 30;
+  const estRemaining = Math.max(0, estTotalSec - elapsed);
+  const estMinutes = Math.ceil(estRemaining / 60);
+
+  const formatElapsed = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return m > 0 ? `${m}:${String(sec).padStart(2, "0")}` : `${sec}s`;
+  };
+
+  return (
+    <div
+      className="kpi-enter kpi-enter-5"
+      style={{
+        ...CARD,
+        marginBottom: 18,
+        borderTop: "3px solid #3B82F6",
+        borderColor: "var(--card-border)",
+        borderTopColor: "#3B82F6",
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          padding: "14px 18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderBottom: "1px solid #f3f4f6",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span
+            className="pill-pulse"
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              background: "#3B82F6",
+              flexShrink: 0,
+            }}
+          />
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>
+            מייצר קריאייטיב{dots}
+          </span>
+          <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>
+            {formatElapsed(elapsed)}
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 10, color: "var(--text-placeholder)" }}>
+            בדיקה #{pollCount + 1} · כל 10 שניות
+          </span>
+          <button
+            onClick={onBack}
+            style={{
+              fontSize: 11,
+              padding: "5px 10px",
+              borderRadius: 6,
+              border: "1px solid var(--card-border)",
+              background: "#fff",
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#DC2626";
+              e.currentTarget.style.color = "#DC2626";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--card-border)";
+              e.currentTarget.style.color = "var(--text-secondary)";
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            עזוב ושוב אח״כ
+          </button>
+        </div>
+      </div>
+
+      {/* Status info row */}
+      <div
+        style={{
+          padding: "12px 18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "#f9fafb",
+          borderBottom: "1px solid #f3f4f6",
+        }}
+      >
+        <div style={{ display: "flex", gap: 16 }}>
+          <div>
+            <span style={{ fontSize: 10, color: "var(--text-placeholder)", fontWeight: 600 }}>יעד</span>
+            <span className="num-display" style={{ fontSize: 16, color: "var(--text-primary)", marginInlineStart: 6 }}>
+              {totalTarget}
+            </span>
+          </div>
+          <div>
+            <span style={{ fontSize: 10, color: "var(--text-placeholder)", fontWeight: 600 }}>מוכנים</span>
+            <span className="num-display" style={{ fontSize: 16, color: "#059669", marginInlineStart: 6 }}>
+              {completedCount}
+            </span>
+          </div>
+          <div>
+            <span style={{ fontSize: 10, color: "var(--text-placeholder)", fontWeight: 600 }}>בתהליך</span>
+            <span className="num-display" style={{ fontSize: 16, color: "#D97706", marginInlineStart: 6 }}>
+              {pendingCount || (conceptCount === 0 ? totalTarget : 0)}
+            </span>
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+          {estMinutes > 0 ? `~${estMinutes} דק׳ נותרו (הערכה)` : "כמעט סיום..."}
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ padding: "0 18px", paddingTop: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+          <span style={{ fontSize: 11, color: "var(--text-muted)" }}>התקדמות כללית</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#1D4ED8" }}>
+            {Math.round(completedFraction)}%
+          </span>
+        </div>
+        <div style={{ width: "100%", height: 8, borderRadius: 4, background: "#EFF6FF", overflow: "hidden" }}>
+          <div
+            style={{
+              height: "100%",
+              borderRadius: 4,
+              width: `${Math.max(completedFraction, conceptCount === 0 ? 3 : 5)}%`,
+              background: "linear-gradient(90deg, #3B82F6, #818CF8)",
+              transition: "width 0.8s ease",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)",
+                backgroundSize: "200% 100%",
+                animation: "shimmer 1.5s ease infinite",
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Pipeline steps */}
+      <div style={{ padding: "14px 18px", display: "flex", gap: 4, flexWrap: "wrap" }}>
+        {PIPELINE_STEPS.map((step, i) => {
+          const isActive = i === activeStep;
+          const isDone = i < activeStep;
+          return (
+            <div
+              key={step.key}
+              style={{
+                fontSize: 11,
+                padding: "5px 10px",
+                borderRadius: 6,
+                background: isActive ? "#EFF6FF" : isDone ? "#ECFDF5" : "#f9fafb",
+                color: isActive ? "#1D4ED8" : isDone ? "#065F46" : "var(--text-placeholder)",
+                fontWeight: isActive ? 700 : 500,
+                border: `1px solid ${isActive ? "#BFDBFE" : isDone ? "#A7F3D0" : "#f3f4f6"}`,
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                transition: "all 0.3s ease",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span style={{ fontSize: 12 }}>{isDone ? "✓" : step.icon}</span>
+              {step.label}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Safety note */}
+      <div
+        style={{
+          padding: "10px 18px",
+          borderTop: "1px solid #f3f4f6",
+          fontSize: 11,
+          color: "var(--text-placeholder)",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+        }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+        אפשר לעזוב את הדף ולחזור — היצירה ממשיכה ברקע. הדף מתעדכן אוטומטית.
+      </div>
+    </div>
+  );
+}
+
 // ── KPI Card ────────────────────────────────────────────────────────────────
 
 function KpiCard({
@@ -584,17 +848,24 @@ function KpiCard({
 // ── Batch Detail View ───────────────────────────────────────────────────────
 
 function BatchDetail({ batchId, clients }: { batchId: string; clients: DbClient[] }) {
+  const router = useRouter();
+  const [batch, setBatch] = useState<MetaBatch | null>(null);
   const [concepts, setConcepts] = useState<MetaConcept[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalImage, setModalImage] = useState<string | null>(null);
+  const [pollCount, setPollCount] = useState(0);
 
   const clientMap = Object.fromEntries(clients.map((c) => [c.id, c.name]));
 
-  const loadConcepts = useCallback(async () => {
+  const loadData = useCallback(async () => {
     try {
-      const result = await fetchConcepts(batchId);
-      setConcepts(result.concepts);
+      const [conceptResult, batchData] = await Promise.all([
+        fetchConcepts(batchId),
+        fetchBatchById(batchId),
+      ]);
+      setConcepts(conceptResult.concepts);
+      setBatch(batchData);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "שגיאה בטעינה");
@@ -604,21 +875,27 @@ function BatchDetail({ batchId, clients }: { batchId: string; clients: DbClient[
   }, [batchId]);
 
   useEffect(() => {
-    loadConcepts();
-  }, [loadConcepts]);
+    loadData();
+  }, [loadData]);
 
-  // Poll while generating
-  const hasGenerating = concepts.some((c) => c.status === "pending") && concepts.length > 0;
+  // Poll while generating — also poll when 0 concepts (batch just created)
+  const isGenerating =
+    concepts.some((c) => c.status === "pending") ||
+    (concepts.length === 0 && batch && ["draft", "generating"].includes(batch.status));
+
   useEffect(() => {
-    if (!hasGenerating) return;
-    const interval = setInterval(loadConcepts, 10000);
+    if (!isGenerating) return;
+    const interval = setInterval(() => {
+      loadData();
+      setPollCount((c) => c + 1);
+    }, 10000);
     return () => clearInterval(interval);
-  }, [hasGenerating, loadConcepts]);
+  }, [isGenerating, loadData]);
 
   const handleAction = async (conceptId: string, action: ReviewAction, feedback?: string) => {
     try {
       await reviewConcept(conceptId, action, feedback);
-      await loadConcepts();
+      await loadData();
     } catch (err) {
       alert(err instanceof Error ? err.message : "שגיאה");
     }
@@ -627,6 +904,8 @@ function BatchDetail({ batchId, clients }: { batchId: string; clients: DbClient[
   const approved = concepts.filter((c) => c.status === "approved").length;
   const rejected = concepts.filter((c) => c.status === "rejected").length;
   const pending = concepts.filter((c) => c.status === "pending").length;
+
+  const clientName = batch ? (clientMap[batch.client_id] || batch.client_id.slice(0, 8)) : "";
 
   return (
     <div style={{ padding: "24px 16px", maxWidth: 1100 }}>
@@ -658,37 +937,74 @@ function BatchDetail({ batchId, clients }: { batchId: string; clients: DbClient[
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", margin: 0, lineHeight: 1.2 }}>
-            סקירת באצ׳
+            סקירת באצ׳ {clientName && <span style={{ color: "var(--brand)" }}>— {clientName}</span>}
           </h1>
-          <p style={{ fontSize: 11, color: "var(--text-placeholder)", marginTop: 4, fontFamily: "monospace", letterSpacing: "0.02em" }}>
-            {batchId.slice(0, 8)}...
-          </p>
-        </div>
-        {!loading && concepts.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* Progress bar */}
-            <div style={{ width: 120, height: 6, borderRadius: 3, background: "#f3f4f6", overflow: "hidden" }}>
-              <div
-                style={{
-                  height: "100%",
-                  borderRadius: 3,
-                  width: `${((approved + rejected) / concepts.length) * 100}%`,
-                  background: rejected > 0 && approved === 0
-                    ? "#DC2626"
-                    : "linear-gradient(90deg, #059669, #10B981)",
-                  transition: "width 0.4s ease",
-                }}
-              />
-            </div>
-            <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>
-              {approved + rejected}/{concepts.length}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+            <span style={{ fontSize: 11, color: "var(--text-placeholder)", fontFamily: "monospace", letterSpacing: "0.02em" }}>
+              {batchId.slice(0, 8)}...
             </span>
+            {batch && <StatusBadge status={batch.status} />}
           </div>
-        )}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Review progress (only when concepts exist) */}
+          {!loading && concepts.length > 0 && (
+            <>
+              <div style={{ width: 120, height: 6, borderRadius: 3, background: "#f3f4f6", overflow: "hidden" }}>
+                <div
+                  style={{
+                    height: "100%",
+                    borderRadius: 3,
+                    width: `${((approved + rejected) / concepts.length) * 100}%`,
+                    background: rejected > 0 && approved === 0
+                      ? "#DC2626"
+                      : "linear-gradient(90deg, #059669, #10B981)",
+                    transition: "width 0.4s ease",
+                  }}
+                />
+              </div>
+              <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>
+                {approved + rejected}/{concepts.length}
+              </span>
+            </>
+          )}
+          {/* Back to create new — always available */}
+          <Link
+            href="/creatives/new"
+            style={{
+              fontSize: 11,
+              padding: "6px 12px",
+              borderRadius: 6,
+              border: "1px solid var(--card-border)",
+              background: "#fff",
+              color: "var(--text-secondary)",
+              textDecoration: "none",
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              transition: "all 0.15s",
+              whiteSpace: "nowrap",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--brand)";
+              e.currentTarget.style.color = "var(--brand)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--card-border)";
+              e.currentTarget.style.color = "var(--text-secondary)";
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            באצ׳ חדש
+          </Link>
+        </div>
       </div>
 
       {/* Stats row */}
-      {!loading && (
+      {!loading && concepts.length > 0 && (
         <div
           className="responsive-grid-4"
           style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 18 }}
@@ -700,36 +1016,15 @@ function BatchDetail({ batchId, clients }: { batchId: string; clients: DbClient[
         </div>
       )}
 
-      {/* Generating notice */}
-      {hasGenerating && (
-        <div
-          className="kpi-enter kpi-enter-5"
-          style={{
-            background: "#EFF6FF",
-            border: "1px solid #BFDBFE",
-            borderRadius: 10,
-            padding: "12px 16px",
-            marginBottom: 16,
-            fontSize: 12,
-            color: "#1D4ED8",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            fontWeight: 500,
-          }}
-        >
-          <span
-            className="pill-pulse"
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "#3B82F6",
-              flexShrink: 0,
-            }}
-          />
-          <span>יצירת תמונות בתהליך — הדף מתעדכן אוטומטית כל 10 שניות</span>
-        </div>
+      {/* Generation pipeline progress — show when generating OR when empty & batch exists */}
+      {isGenerating && (
+        <GenerationProgress
+          conceptCount={concepts.length}
+          pendingCount={pending}
+          batchSize={batch?.batch_size ?? 0}
+          pollCount={pollCount}
+          onBack={() => router.push("/creatives")}
+        />
       )}
 
       {/* Content */}
@@ -745,9 +1040,24 @@ function BatchDetail({ batchId, clients }: { batchId: string; clients: DbClient[
       ) : error ? (
         <div style={{ ...CARD, padding: "48px 20px", textAlign: "center" }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "#DC2626", marginBottom: 6 }}>שגיאה בטעינה</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{error}</div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>{error}</div>
+          <button
+            onClick={() => { setError(null); setLoading(true); loadData(); }}
+            style={{
+              fontSize: 12,
+              padding: "7px 16px",
+              borderRadius: 6,
+              border: "1px solid var(--card-border)",
+              background: "#fff",
+              color: "var(--text-primary)",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            נסה שוב
+          </button>
         </div>
-      ) : concepts.length === 0 ? (
+      ) : concepts.length === 0 && !isGenerating ? (
         <div style={{ ...CARD, padding: "48px 20px", textAlign: "center" }}>
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 12 }}>
             <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -755,13 +1065,30 @@ function BatchDetail({ batchId, clients }: { batchId: string; clients: DbClient[
             <path d="M21 15l-5-5L5 21" />
           </svg>
           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
-            אין קונספטים עדיין
+            אין קונספטים
           </div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-            הבאצ׳ ייווצר בקרוב — הדף יתעדכן אוטומטית
+          <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>
+            הבאצ׳ הזה לא מכיל קונספטים
           </div>
+          <Link
+            href="/creatives/new"
+            style={{
+              fontSize: 12,
+              padding: "8px 18px",
+              borderRadius: 8,
+              background: "var(--brand)",
+              color: "#fff",
+              textDecoration: "none",
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            צור באצ׳ חדש
+          </Link>
         </div>
-      ) : (
+      ) : concepts.length > 0 ? (
         <div
           className="responsive-grid-4"
           style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}
@@ -776,7 +1103,7 @@ function BatchDetail({ batchId, clients }: { batchId: string; clients: DbClient[
             />
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

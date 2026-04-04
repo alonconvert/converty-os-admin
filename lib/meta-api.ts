@@ -146,6 +146,14 @@ export async function fetchBatches(params?: {
   return apiFetch(`/api/meta-creatives/batches${qs ? `?${qs}` : ""}`);
 }
 
+/** Fetch a single batch by ID (uses list endpoint, filters client-side) */
+export async function fetchBatchById(
+  batchId: string
+): Promise<MetaBatch | null> {
+  const { batches } = await fetchBatches({ limit: 100 });
+  return batches.find((b) => b.id === batchId) ?? null;
+}
+
 export async function fetchBatchesByClient(
   clientId: string,
   limit = 20
