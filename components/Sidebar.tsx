@@ -45,6 +45,11 @@ const NavIcon = {
       <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
     </svg>
   ),
+  metaCreative: (active: boolean) => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={active ? "#7C3AED" : "#9CA3AF"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+    </svg>
+  ),
   searchTerms: (active: boolean) => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={active ? "#7C3AED" : "#9CA3AF"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -91,6 +96,7 @@ const navSections = [
     items: [
       { href: "/campaigns", label: "קמפיינים", iconKey: "campaigns" as const, badgeKey: "pendingCampaignChanges" as const },
       { href: "/creative", label: "קריאייטיב", iconKey: "creative" as const },
+      { href: "/creatives", label: "Meta קריאייטיב", iconKey: "metaCreative" as const },
       { href: "/search-terms", label: "מונחי חיפוש", iconKey: "searchTerms" as const },
       { href: "/landing-pages", label: "דפי נחיתה", iconKey: "landingPages" as const },
       { href: "/reports", label: "דוחות", iconKey: "reports" as const },
