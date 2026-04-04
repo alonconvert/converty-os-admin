@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://converty-os-production.up.railway.app";
+const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN || "";
 
 // ─── Original onboarding flow steps ─────────────────────────────────────────
 
@@ -74,9 +75,12 @@ export default function Onboarding() {
     setResult(null);
 
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (API_TOKEN) headers["Authorization"] = `Bearer ${API_TOKEN}`;
+
       const res = await fetch(`${API_URL}/api/onboarding/quick`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ name: name.trim(), phone: phone.trim() }),
       });
 
