@@ -52,9 +52,23 @@ export default function Onboarding() {
   const allGatesOk = gates.every((g) => g.done);
   const toggleGate = (i: number) => setGates((prev) => prev.map((g, idx) => idx === i ? { ...g, done: !g.done } : g));
 
+  const validateIsraeliMobile = (p: string): boolean => {
+    const digits = p.replace(/\D/g, '');
+    return (digits.length === 10 && /^05[0-9]/.test(digits)) ||
+           (digits.length === 12 && /^9725[0-9]/.test(digits));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !phone.trim()) return;
+
+    if (!validateIsraeliMobile(phone)) {
+      setResult({
+        success: false,
+        message: 'מספר טלפון לא תקין. הזן מספר נייד ישראלי (למשל 054-260-4967)',
+      });
+      return;
+    }
 
     setLoading(true);
     setResult(null);
